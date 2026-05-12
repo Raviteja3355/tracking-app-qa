@@ -7,7 +7,7 @@ import FAQ from '@/components/layout/FAQ'
 import CustomerSupport from '@/components/layout/CustomerSupport'
 import Footer from '@/components/layout/Footer'
 
-export default function TrackingPage() {
+export default function TrackingPageEn() {
   const { t } = useTranslation()
   return (
     <>
