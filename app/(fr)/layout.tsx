@@ -20,6 +20,20 @@ export const metadata: Metadata = {
   title: 'UniUni • Suivi',
   description:
     "Suivez votre package instantanément avec le tracker de package d'UniUni.",
+  keywords: [
+    'suivi de colis', 'suivi UniUni', 'suivi de livraison',
+    'tracker colis', 'suivre mon colis', 'UniUni', 'suivi expédition',
+  ],
+  icons: {
+    icon: [
+      { url: 'https://cdn.uniuni.com/wp-content/uploads/2025/10/cropped-android-chrome-512x512-1-2-32x32.png', sizes: '32x32' },
+      { url: 'https://cdn.uniuni.com/wp-content/uploads/2025/10/cropped-android-chrome-512x512-1-2-192x192.png', sizes: '192x192' },
+    ],
+    shortcut: 'https://cdn.uniuni.com/wp-content/uploads/2025/10/android-chrome-192x192-1.png',
+    apple: [
+      { url: 'https://cdn.uniuni.com/wp-content/uploads/2025/10/cropped-android-chrome-512x512-1-2-180x180.png', sizes: '180x180' },
+    ],
+  },
   metadataBase: new URL('https://www.uniuni.com'),
   alternates: {
     canonical: 'https://www.uniuni.com/fr/suivi/',

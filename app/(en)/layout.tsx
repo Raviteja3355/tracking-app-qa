@@ -20,6 +20,21 @@ export const metadata: Metadata = {
   title: 'UniUni • Package Tracking',
   description:
     "Track your package instantly with UniUni's package tracker. Enter your tracking number now for real-time updates and delivery status.",
+  keywords: [
+    'package tracking', 'UniUni tracking', 'parcel tracking',
+    'delivery tracking', 'track my package', 'package tracker',
+    'UniUni', 'shipment tracking',
+  ],
+  icons: {
+    icon: [
+      { url: 'https://cdn.uniuni.com/wp-content/uploads/2025/10/cropped-android-chrome-512x512-1-2-32x32.png', sizes: '32x32' },
+      { url: 'https://cdn.uniuni.com/wp-content/uploads/2025/10/cropped-android-chrome-512x512-1-2-192x192.png', sizes: '192x192' },
+    ],
+    shortcut: 'https://cdn.uniuni.com/wp-content/uploads/2025/10/android-chrome-192x192-1.png',
+    apple: [
+      { url: 'https://cdn.uniuni.com/wp-content/uploads/2025/10/cropped-android-chrome-512x512-1-2-180x180.png', sizes: '180x180' },
+    ],
+  },
   metadataBase: new URL('https://www.uniuni.com'),
   alternates: {
     canonical: 'https://www.uniuni.com/tracking/',
