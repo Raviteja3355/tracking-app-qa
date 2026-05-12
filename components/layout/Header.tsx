@@ -22,19 +22,22 @@ export default function Header() {
 
   return (
     <nav className="sticky top-0 z-50 flex items-center justify-between bg-white px-14 py-6">
-      <a href="https://www.uniuni.com" aria-label="UniUni home" className="inline-flex items-center">
+      <a href="https://www.uniuni.com" aria-label="UniUni home" title="UniUni" className="inline-flex items-center">
         <Logo className="h-[38px] w-auto" />
+        <span className="sr-only">UniUni</span>
       </a>
 
       <div className="flex items-center gap-10">
         <a
           href="#faqs"
+          title={t('navFaqs')}
           className="text-[16px] font-medium text-[#101820] transition-colors duration-200 hover:text-[#FF8F1C]"
         >
           {t('navFaqs')}
         </a>
         <a
           href="#support"
+          title={t('navSupport')}
           className="text-[16px] font-medium text-[#101820] transition-colors duration-200 hover:text-[#FF8F1C]"
         >
           {t('navSupport')}
@@ -60,6 +63,7 @@ export default function Header() {
                   <a
                     key={lang.code}
                     href={lang.href}
+                    title={lang.label}
                     onClick={() => { setCurrentLang(lang); setLangOpen(false) }}
                     className={`block px-5 py-3 text-[14px] font-medium hover:text-[#FF8F1C] ${
                       currentLang.code === lang.code ? 'text-[#FF8F1C]' : 'text-[#101820]'

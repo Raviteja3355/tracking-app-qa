@@ -59,15 +59,17 @@ const AGENT_ID = 151000701681;
 function FieldLabel({
   label,
   required,
+  htmlFor,
 }: {
   label: string;
   required?: boolean;
+  htmlFor: string;
 }) {
   return (
-    <div className="mb-2.5 flex items-center gap-1">
+    <label htmlFor={htmlFor} className="mb-2.5 flex items-center gap-1">
       <span className="text-[16px] font-semibold text-uni-black">{label}</span>
       {required && <span className="text-uni-red">*</span>}
-    </div>
+    </label>
   );
 }
 
@@ -316,8 +318,9 @@ export default function CustomerSupport() {
           >
             {/* Contact Reason */}
             <div className="mb-5">
-              <FieldLabel label={t("labelContactReason")} required />
+              <FieldLabel label={t("labelContactReason")} required htmlFor="contact-reason" />
               <select
+                id="contact-reason"
                 value={reason}
                 onChange={(e) =>
                   onReasonChange(e.target.value as ContactReason)
@@ -335,8 +338,9 @@ export default function CustomerSupport() {
 
             {/* Details */}
             <div className="mb-5">
-              <FieldLabel label={t("labelDetails")} required />
+              <FieldLabel label={t("labelDetails")} required htmlFor="contact-details" />
               <select
+                id="contact-details"
                 value={incident}
                 onChange={(e) => setIncident(e.target.value)}
                 className={selectClass}
@@ -353,8 +357,9 @@ export default function CustomerSupport() {
             {/* First + Last Name */}
             <div className="mb-5 grid grid-cols-2 gap-4 max-[720px]:grid-cols-1">
               <div>
-                <FieldLabel label={t("labelFirstName")} required />
+                <FieldLabel label={t("labelFirstName")} required htmlFor="first-name" />
                 <input
+                  id="first-name"
                   type="text"
                   value={firstName}
                   onChange={(e) => setFirstName(e.target.value)}
@@ -363,8 +368,9 @@ export default function CustomerSupport() {
                 />
               </div>
               <div>
-                <FieldLabel label={t("labelLastName")} required />
+                <FieldLabel label={t("labelLastName")} required htmlFor="last-name" />
                 <input
+                  id="last-name"
                   type="text"
                   value={lastName}
                   onChange={(e) => setLastName(e.target.value)}
@@ -376,8 +382,9 @@ export default function CustomerSupport() {
 
             {/* Email */}
             <div className="mb-5">
-              <FieldLabel label={t("labelEmail")} required />
+              <FieldLabel label={t("labelEmail")} required htmlFor="support-email" />
               <input
+                id="support-email"
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
@@ -388,8 +395,9 @@ export default function CustomerSupport() {
 
             {/* Tracking Number */}
             <div className="mb-5">
-              <FieldLabel label={t("labelTrackingNumber")} required />
+              <FieldLabel label={t("labelTrackingNumber")} required htmlFor="tracking-number" />
               <input
+                id="tracking-number"
                 type="text"
                 value={trackingNumber}
                 onChange={(e) => setTrackingNumber(e.target.value)}
@@ -400,8 +408,9 @@ export default function CustomerSupport() {
 
             {/* Country */}
             <div className="mb-5">
-              <FieldLabel label={t("labelCountry")} required />
+              <FieldLabel label={t("labelCountry")} required htmlFor="support-country" />
               <select
+                id="support-country"
                 value={country}
                 onChange={(e) => setCountry(e.target.value)}
                 className={selectClass}
@@ -415,8 +424,9 @@ export default function CustomerSupport() {
             {/* Province / State */}
             {states.length > 0 && (
               <div className="mb-5">
-                <FieldLabel label={t("labelProvinceState")} required />
+                <FieldLabel label={t("labelProvinceState")} required htmlFor="province-state" />
                 <select
+                  id="province-state"
                   value={selectedState}
                   onChange={(e) => onStateChange(e.target.value)}
                   className={selectClass}
@@ -433,8 +443,9 @@ export default function CustomerSupport() {
             {/* City / Warehouse */}
             {cities.length > 0 && (
               <div className="mb-5">
-                <FieldLabel label={t("labelLocation")} required />
+                <FieldLabel label={t("labelLocation")} required htmlFor="city-warehouse" />
                 <select
+                  id="city-warehouse"
                   value={warehouse}
                   onChange={(e) => setWarehouse(e.target.value)}
                   className={selectClass}
@@ -452,9 +463,9 @@ export default function CustomerSupport() {
             <div className="mb-7">
               <div className="mb-2.5 flex items-center justify-between gap-2">
                 <div className="flex items-center gap-1">
-                  <span className="text-[16px] font-semibold text-uni-black">
+                  <label htmlFor="how-can-help" className="text-[16px] font-semibold text-uni-black">
                     {t("labelHowCanWeHelp")}
-                  </span>
+                  </label>
                   <span className="text-uni-red">*</span>
                 </div>
                 <label className="flex cursor-pointer items-center gap-1.5 text-[14px] text-[#03A3D6] transition-opacity hover:opacity-75">
@@ -486,6 +497,7 @@ export default function CustomerSupport() {
                 </span>
               )}
               <textarea
+                id="how-can-help"
                 value={content}
                 onChange={(e) => setContent(e.target.value)}
                 maxLength={500}

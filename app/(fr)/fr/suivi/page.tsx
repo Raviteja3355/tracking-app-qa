@@ -10,7 +10,7 @@ import Footer from '@/components/layout/Footer'
 export default function TrackingPageFr() {
   const { t } = useTranslation()
   return (
-    <>
+    <main>
       <section
         className="relative w-full py-15 pb-25 max-[720px]:py-10 max-[720px]:pb-17.5"
         style={{ background: 'linear-gradient(to top, #fff 0%, #EDF4F6 100%)' }}
@@ -28,6 +28,6 @@ export default function TrackingPageFr() {
       <FAQ />
       <CustomerSupport />
       <Footer />
-    </>
+    </main>
   )
 }
