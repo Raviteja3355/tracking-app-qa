@@ -205,6 +205,7 @@ export default function TrackingResults({
             isFirst={i === 0}
             eddData={eddMap[result.tno]}
             isOpen={!!openDetails[result.tno]}
+            collapsible={validResults.length > 1}
             onToggle={() => onToggleDetail(result.tno)}
             onViewPod={onViewPod}
             onDownloadPod={onDownloadPod}

@@ -14,6 +14,7 @@ interface Props {
   isFirst: boolean
   eddData: EddData | undefined
   isOpen: boolean
+  collapsible?: boolean
   onToggle: () => void
   onViewPod: (tno: string, trackingIndex: number) => void
   onDownloadPod: (index: number) => void
@@ -74,6 +75,7 @@ export default function ParcelCard({
   isFirst,
   eddData,
   isOpen,
+  collapsible = true,
   onToggle,
   onViewPod,
   onDownloadPod,
@@ -147,7 +149,7 @@ export default function ParcelCard({
         }}
       >
         <button
-          onClick={onToggle}
+          onClick={collapsible ? onToggle : undefined}
           style={{
             width: '100%',
             display: 'flex',
@@ -156,25 +158,27 @@ export default function ParcelCard({
             padding: '20px 38px',
             background: 'none',
             border: 'none',
-            cursor: 'pointer',
+            cursor: collapsible ? 'pointer' : 'default',
           }}
         >
           <span style={{ fontSize: 16, fontWeight: 600, color: '#101820' }}>{displayTno}</span>
-          <svg
-            width="18"
-            height="18"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="#8D8D8D"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            style={{ transition: 'transform .2s', transform: isOpen ? 'rotate(180deg)' : 'none', flexShrink: 0 }}
-          >
-            <polyline points="6 9 12 15 18 9" />
-          </svg>
+          {collapsible && (
+            <svg
+              width="18"
+              height="18"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="#8D8D8D"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              style={{ transition: 'transform .2s', transform: isOpen ? 'rotate(180deg)' : 'none', flexShrink: 0 }}
+            >
+              <polyline points="6 9 12 15 18 9" />
+            </svg>
+          )}
         </button>
-        {isOpen && (
+        {(isOpen || !collapsible) && (
           <div style={{ padding: '0 38px 38px' }}>
             <ResultCard
               result={result}
