@@ -1,0 +1,3016 @@
+<!-- https://delivery-api.uniuni.ca/cargo/trackinguniuninew -->
+<!-- https://map.uniexpress.ca/orders/getsignaturenew -->
+<div data-v-21bdb846="" id="loader-group">
+  <div data-v-21bdb846="" class="loader-content">
+    <div data-v-21bdb846="" class="loading-text">Loading</div>
+    <div data-v-21bdb846="" class="yuan1"></div>
+    <div data-v-21bdb846="" class="yuan2"></div>
+    <div data-v-21bdb846="" class="yuan3"></div>
+    <div data-v-21bdb846="" class="yuan4"></div>
+    <div data-v-21bdb846="" class="yuan5"></div>
+  </div>
+</div>
+<div data-v-21bdb846="" id="tracking-input-group">
+  <div class="track-wrap">
+    <div class="track-input-wrap" id="input-track-wrap">
+      <textarea
+        id="input-track"
+        placeholder="Enter your tracking number"
+        rows="1"
+        onclick="handleTextAreaClick()"
+      ></textarea>
+      <button onclick="redirect_to_track()" class="track-btn desktop">
+        Track
+      </button>
+    </div>
+
+    <span class="hint">Enter up to 25 items, separated by commas.</span>
+
+    <button onclick="redirect_to_track()" class="track-btn mobile">
+      Track
+    </button>
+  </div>
+</div>
+
+<!-- <div data-v-21bdb846="" id="alert-notice">
+	<tr data-v-21bdb846="">
+        <button data-v-21bdb846="" onclick="openNotice();" id="alert-button">
+           <span class="elementor-button-icon elementor-align-icon-left">
+				<i aria-hidden="true" class="icon icon-warning"></i>
+			</span>
+			Service alert
+		</button>
+   </tr>
+</div> -->
+
+<!-- The ZIP Modal -->
+<div id="myModal" class="modal" data-v-21bdb846="">
+  <!-- Modal content -->
+  <div class="modal-content" data-v-21bdb846="">
+    <span class="close" onclick="closeModal()">&times;</span>
+    <div class="title-style">
+      Please enter the destination postal code of the parcel
+    </div>
+    <div class="wrong-zip">Incorrect postal code. Please try again</div>
+    <input data-v-21bdb846="" type="text" id="input-zip" />
+    <button data-v-21bdb846="" id="button-zip" onclick="verifyZip()">
+      Verify
+    </button>
+  </div>
+</div>
+
+<!-- The POD Modal -->
+<div id="myPOD" class="modal-pod" data-v-21bdb846="">
+  <!-- POD content -->
+  <div class="pod-content" data-v-21bdb846="">
+    <div data-v-21bdb846="" id="POD"></div>
+    <div class="closePOD" onclick="closePOD()">&times;</div>
+  </div>
+</div>
+
+<!-- The Alert Notice Modal -->
+<div id="alert-notice-modal" class="notice-modal" data-v-21bdb846="">
+  <div class="notice-content" data-v-21bdb846="">
+    <!--         <div data-v-21bdb846="" class="notice-title">
+            Important Update
+        </div> -->
+    <div data-v-21bdb846="" class="notice-type" style="font-size: 26px">
+      SERVICE ALERT
+    </div>
+    <div data-v-21bdb846="" class="notice-para"></div>
+    <div data-v-21bdb846="" class="notice-para">
+      We have made changes to our Customer Support contact numbers.
+    </div>
+    <div data-v-21bdb846="" class="notice-para" style="font-weight: 600">
+      For Canada:
+    </div>
+    <div data-v-21bdb846="" class="notice-para" style="margin-top: 5px">
+      Pacific and Mountain time zones:
+      <span style="font-weight: 600">1-604-229-2007</span>
+    </div>
+    <div data-v-21bdb846="" class="notice-para" style="margin-top: 5px">
+      Central, Eastern and Atlantic time zones:<span style="font-weight: 600"
+        >1-647-360-4178</span
+      >
+    </div>
+    <div data-v-21bdb846="" class="notice-para" style="font-weight: 600">
+      For the United States:
+    </div>
+    <div data-v-21bdb846="" class="notice-para" style="margin-top: 5px">
+      Pacific and Mountain time zones:
+      <span style="font-weight: 600">1-424-284-2432</span>
+    </div>
+    <div data-v-21bdb846="" class="notice-para" style="margin-top: 5px">
+      Central and Eastern time zones:
+      <span style="font-weight: 600">1-315-533-4690</span>
+    </div>
+    <div data-v-21bdb846="" class="notice-para">
+      Our Customer Support call centre is open
+      <span style="font-weight: 600">Mon-Sat, 10 am to 9 pm EST</span>. Or you
+      may contact us via the help form on our Support page.
+    </div>
+    <div data-v-21bdb846="" class="notice-para"></div>
+    <div data-v-21bdb846="" style="text-align: center">
+      <button
+        data-v-21bdb846=""
+        id="button-notice-close"
+        onclick="closeNotice()"
+      >
+        OK
+      </button>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.20.1/moment.min.js"></script>
+<script src="https://cdn.jsdelivr.net/gh/linways/table-to-excel@v1.0.4/dist/tableToExcel.js"></script>
+
+<script type="text/javascript">
+  jQuery("#tracking-alert").hide();
+  jQuery("#tracking-exceed-alert").hide();
+  jQuery(".wrong-zip").hide();
+  jQuery("#myModal").hide();
+  jQuery("#myPOD").hide();
+  jQuery("#alert-notice-modal").hide();
+  jQuery("#loader-group").hide();
+  jQuery(".content-pieces").css("display", "none");
+
+  let currentNo = "";
+  let currentResValid = [];
+  let isTicketGlobal = [];
+  let ticketDetailList = [];
+  let ticketDeliveredList = [];
+  let ticketMasterList = [];
+
+  //     setTimeout(openNotice, 2000);
+
+  function toggleMenu() {
+    jQuery("#menuDropdown").show();
+  }
+
+  // Close the dropdown if the user clicks outside of it
+  window.onclick = function (event) {
+    if (
+      !event.target.matches(".parcel-detail-dropdown-action") &&
+      !event.target.matches(".parcel-detail-large") &&
+      !event.target.matches(".parcel-detail-small")
+    ) {
+      jQuery("#menuDropdown").hide();
+    }
+  };
+
+  function copyReportToClipboard() {
+    jQuery("#excel-table").css("display", "table");
+    jQuery("#excel-table-head").css("display", "table");
+    jQuery("#excel-table-body").css("display", "table");
+    let table = document.getElementById("excel-table");
+    let range = document.createRange();
+    range.selectNodeContents(table);
+    let select = window.getSelection();
+    select.removeAllRanges();
+    select.addRange(range);
+    document.execCommand("copy");
+    jQuery("#excel-table").css("display", "none");
+    jQuery("#excel-table-head").css("display", "none");
+    jQuery("#excel-table-body").css("display", "none");
+  }
+
+  function exportReportToExcel() {
+    let table = document.getElementById("excel-table");
+    TableToExcel.convert(table, {
+      name: `Tracking Result from UNIUNI.xlsx`,
+      sheet: {
+        name: "Parcel Details",
+      },
+    });
+  }
+
+  function openNotice() {
+    jQuery("#alert-notice-modal").show();
+  }
+
+  function closeNotice() {
+    jQuery("#alert-notice-modal").hide();
+  }
+
+  function formatTime(timestamp) {
+    var d = new Date(timestamp * 1000);
+    return {
+      date:
+        d.getUTCFullYear() +
+        "-" +
+        ("00" + (d.getUTCMonth() + 1)).slice(-2) +
+        "-" +
+        ("00" + d.getUTCDate()).slice(-2),
+      time:
+        ("00" + d.getUTCHours()).slice(-2) +
+        ":" +
+        ("00" + d.getUTCMinutes()).slice(-2) +
+        ":" +
+        ("00" + d.getUTCSeconds()).slice(-2),
+    };
+  }
+
+  function formatTimeCST(timestamp) {
+    // CST: UCT - 6
+    var d = moment.utc(new Date((timestamp - 6 * 3600) * 1000));
+    console.log(d.format("HH:mm:ss"));
+    console.log(d.format("YYYY-MM-DD"));
+    return {
+      time: d.format("HH:mm:ss"),
+      date: d.format("YYYY-MM-DD"),
+    };
+  }
+
+  function formatTimeStrCST(strCST) {
+    const date = new Date(strCST);
+    const timestamp = date.getTime() / 1000;
+    return formatTimeCST(timestamp);
+  }
+
+  function getUrlVars() {
+    var vars = [],
+      hash;
+    var hashes = window.location.href
+      .slice(window.location.href.indexOf("?") + 1)
+      .split("&");
+    for (var i = 0; i < hashes.length; i++) {
+      hash = hashes[i].split("=");
+      vars.push(hash[0]);
+      vars[hash[0]] = hash[1];
+    }
+    return vars;
+  }
+
+  jQuery(function () {
+    trackingHideDetail();
+    jQuery("#input-track").change(function (e) {
+      trackingHideDetail();
+    });
+
+    jQuery("#input-track-mobile").change(function (e) {
+      trackingHideDetail();
+    });
+
+    var no = getUrlVars()["no"];
+    if (typeof no != "undefined") {
+      if (no.length > 0) {
+        jQuery("#input-track").val(no);
+        jQuery("#input-track-mobile").val(no);
+        track();
+      }
+    }
+  });
+
+  function hideAlert() {
+    jQuery("#tracking-alert").hide();
+  }
+
+  function hideExceedAlert() {
+    jQuery("#tracking-exceed-alert").hide();
+  }
+
+  function trackingHideDetail() {
+    jQuery("#estimate-time").hide();
+    jQuery(".estimate-time-content").html("");
+    jQuery("#tracking-alert").hide();
+    jQuery("#tracking-exceed-alert").hide();
+    jQuery("#tracking-number").html("");
+    jQuery(".tracking-list").html("");
+    jQuery("#tracking-detail").hide();
+    jQuery("#tracking-alert").hide();
+    jQuery("#tracking-exceed-alert").hide();
+    jQuery(".content-pieces").css("display", "none");
+    jQuery("#parcel-overall-title-num").hide();
+  }
+
+  function getOrderImage(no, zip) {
+    jQuery.ajax({
+      type: "get",
+      dataType: "json",
+      url:
+        "https://map.uniexpress.ca/orders/getsignaturenew?tno=" +
+        no +
+        "&zipcode=" +
+        zip,
+      success: function (response) {
+        if (
+          response == null ||
+          typeof response == "undefined" ||
+          typeof response.status == "undefined" ||
+          typeof response.data.signatures == "undefined" ||
+          response.status != "SUCCESS"
+        ) {
+          jQuery(".wrong-zip").show();
+          return;
+        }
+        var data = response.data.signatures;
+        var imageList = "";
+
+        let length = data.length >= 2 ? 2 : data.length;
+        for (var i = length - 1; i >= 0; i--) {
+          imageList = imageList + `<div><img src="${data[i]}"/> </div>`;
+        }
+
+        jQuery("#POD").html(imageList);
+        jQuery("#myModal").hide();
+        jQuery("#myPOD").show();
+      },
+    });
+  }
+
+  function verifyZip() {
+    var zip = document.getElementById("input-zip").value;
+    var no = currentNo;
+    if (!zip) {
+      jQuery(".wrong-zip").show();
+    } else {
+      getOrderImage(no, zip);
+    }
+  }
+
+  function backToNormalDetail() {
+    jQuery(".content-small").css("display", "block");
+    jQuery(".content-pieces").css("display", "none");
+  }
+
+  function openDetail(index) {
+    if (typeof index === "number") {
+      let trackingList = "";
+      ticketDetailList[index].forEach((res, i) => {
+        trackingList += trackRes(res, index, res.urlType, true, i);
+      });
+      jQuery(".parcel-overall-content").html(trackingList);
+      jQuery(".parcel-overall-summary-left-content").html(
+        ticketMasterList[index],
+      );
+      jQuery(".parcel-overall-summary-right").html(
+        ticketDeliveredList[index] +
+          "/" +
+          ticketDetailList[index].length +
+          " piece delivered",
+      );
+      jQuery(".content-small").css("display", "none");
+      jQuery(".content-pieces").css("display", "block");
+    } else {
+      let arrowClass = index?.item
+        ? "#arrow_down_" + index.item(0).id
+        : "#arrow_down_" + index.id;
+      let idName = index?.item ? "#" + index.item(0).id : "#" + index.id;
+      let statusClass = index?.item
+        ? "#status_" + index.item(0).id
+        : "#status_" + index.id;
+      if (jQuery(idName).css("display") === "none") {
+        jQuery(idName).css("display", "block");
+        jQuery(arrowClass).css("transform", "rotate(180deg)");
+        jQuery(arrowClass).css("transition", "transform 0.3s linear");
+        jQuery(arrowClass).css("display", "block");
+        jQuery(statusClass).css("display", "block");
+      } else {
+        jQuery(idName).css("display", "none");
+        jQuery(arrowClass).css("transform", "rotate(0deg)");
+        jQuery(arrowClass).css("transition", "transform 0.3s linear");
+      }
+    }
+  }
+
+  function trackTickets(resValid, index, isPieces, selectedTno) {
+    if (!isPieces) {
+      isTicketGlobal[index] = true;
+      ticketDetailList[index] = resValid.orders_list;
+      ticketMasterList[index] = resValid.master_tno;
+      ticketDeliveredList[index] = resValid.delivered_count || 0;
+      overviewTemplate =
+        '<div data-v-21bdb846="" class="overview" onclick="openDetail({id-name});"><div data-v-21bdb846="" class="ticket-overview"> <div data-v-21bdb846="" class="piece-overview"> <svg data-v-21bdb846="" xmlns="http://www.w3.org/2000/svg" width="24.5" height="24.5" viewBox="0 0 24.5 24.5"> <path data-v-21bdb846="" id="Folder" d="M10.862,2H8.543C4.076,2,2,4.611,2,9.474v9.052C2,23.163,4.836,26,9.475,26H18.5c4.63,0,7.464-2.838,7.464-7.474L26,12.765c0-4.857-2.027-7.235-6.564-7.235H16.154a1.786,1.786,0,0,1-1.422-.713L13.674,3.407A3.514,3.514,0,0,0,10.862,2ZM8.543,3.742h2.318a1.776,1.776,0,0,1,1.421.712l1.059,1.411a3.525,3.525,0,0,0,2.81,1.407h3.283c3.51,0,4.825,1.542,4.825,5.489l-.032,5.761c0,3.679-2.056,5.737-5.725,5.737H9.475c-3.678,0-5.735-2.057-5.735-5.732V9.474C3.739,5.5,5.135,3.742,8.543,3.742ZM20.411,17.053a.87.87,0,0,0-.87-.871H8.416L8.3,16.19a.871.871,0,0,0,.118,1.734H19.541l.118-.008A.871.871,0,0,0,20.411,17.053Z" transform="translate(-1.75 -1.75)" fill="#121212" stroke="#000" stroke-width="0.5" fill-rule="evenodd"/> </svg> <span data-v-21bdb846="" class="piece-title"> 1 of {total-num} piece shipment </span> <svg data-v-21bdb846="" xmlns="http://www.w3.org/2000/svg" width="6.749" height="12" viewBox="0 0 6.749 12"> <path data-v-21bdb846="" id="Path_22" data-name="Path 22" d="M1.654,6.155,6.529,1.28A.75.75,0,0,0,5.469.22L.22,5.469a.743.743,0,0,0-.163.244.751.751,0,0,0,0,.573.743.743,0,0,0,.163.244L5.469,11.78a.75.75,0,0,0,1.06-1.06L1.654,5.845" transform="translate(6.749 12) rotate(180)"/> </svg> </div> <div data-v-21bdb846="" class="tracking-number-overview-piece"> {item_tracking_no} </div> </div> <div data-v-21bdb846="" class="status-group-mobile"> <span data-v-21bdb846="" class="item-dot-overview"></span> <span data-v-21bdb846="" class="status-overview"> {item_latest_status} </span> </div> </div> <div data-v-21bdb846="" class="status-group"> <span data-v-21bdb846="" class="item-dot-overview"></span> <span data-v-21bdb846="" class="status-overview"> {item_latest_status} </span> </div> </div> ';
+      overviewTemplate = overviewTemplate.replace(
+        "{item_tracking_no}",
+        selectedTno,
+      );
+      var dataOrder = resValid.orders_list.filter((order) => {
+        return order.tno === selectedTno;
+      });
+      var data = dataOrder[0].spath_list;
+      overviewTemplate = overviewTemplate.replace(
+        "{item_latest_status}",
+        data[data.length - 1].pathInfo,
+      );
+      overviewTemplate = overviewTemplate.replace(
+        "{item_latest_status}",
+        data[data.length - 1].pathInfo,
+      );
+      overviewTemplate = overviewTemplate.replace("{id-name}", index);
+      overviewTemplate = overviewTemplate.replace(
+        "{total-num}",
+        resValid.orders_list.length,
+      );
+    }
+
+    let detailList = "";
+    resValid.orders_list.forEach((order, i) => {
+      trackRes(order, index, order.urlType, true, i);
+    });
+    return overviewTemplate + detailList;
+  }
+
+  function trackRes(resValid, index, type, isPieces, pieceIndex) {
+    var data = [];
+    var overviewTemplate =
+      '<div data-v-21bdb846="" class="{overview}" onclick="openDetail({id-name});"><div data-v-21bdb846="" class="tracking-number-overview"> <div data-v-21bdb846=""> {item_tracking_no} </div> <div data-v-21bdb846="" class="arrow"><svg data-v-21bdb846="" id="{arrow-down-name}"  width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M19 8.5L12 15.5L5 8.5" stroke="#121212" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div> </div> <div data-v-21bdb846="" class="status-group-mobile"> <span data-v-21bdb846="" class={item-dot-overview}></span> <span data-v-21bdb846="" class="status-overview"> {item_latest_status} </span> </div> <div data-v-21bdb846="" class="status-group"> <span data-v-21bdb846="" class={item-dot-overview}></span> <span data-v-21bdb846="" class="status-overview"> {item_latest_status} </span> </div> </div> ';
+    var detailTitleTemplate =
+      '<div data-v-21bdb846="" id="parcel-details" class="category-title"><div data-v-21bdb846="" class="parcel-details-title">Parcel Details</div></div>';
+    var estimateTimeTemplate =
+      '<div data-v-21bdb846="" id="estimate-time"><span data-v-21bdb846="" class="estimate-time-title">Estimated Delivery Time: </span><span data-v-21bdb846="" class="estimate-time-content"> {estimatedTime} </span></div>';
+    var detailTemplate =
+      '<div data-v-21bdb846=""> <div data-v-21bdb846="" style="display: flex; align-items: center;"> <div data-v-21bdb846="" style="width: 180px; text-align: end; margin-right: 30px;"> <div data-v-21bdb846=""> {time} </div> </div> <div data-v-21bdb846="" style="display: flex; align-items: center;"> <svg data-v-21bdb846="" class={dot-border-current} width="12" height="12" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg"> <circle cx="6" cy="6" r="6" fill="#FF9E46" /> </svg> <svg data-v-21bdb846="" class={dot-border} width="10" height="10" viewBox="0 0 10 10" fill="none" xmlns="http://www.w3.org/2000/svg"> <path fill-rule="evenodd" clip-rule="evenodd" d="M8.97095 2.27901C9.093 2.40104 9.09302 2.59891 8.97099 2.72096L3.97169 7.72095C3.84966 7.843 3.65181 7.84302 3.52976 7.721L1.02906 5.221C0.907004 5.09898 0.906976 4.90112 1.029 4.77906C1.15102 4.657 1.34888 4.65698 1.47094 4.779L3.75066 7.05807L8.52901 2.27904C8.65104 2.157 8.84891 2.15698 8.97095 2.27901Z" fill="#FF9E46" /> </svg> <div data-v-21bdb846="" class="status-title"> {pathInfo}. </div> </div> </div> <div data-v-21bdb846="" style="display: flex;"> <div data-v-21bdb846="" style="width: 180px; text-align: end; margin-right: 30px;"> {date} </div>  <div data-v-21bdb846=""> <div data-v-21bdb846="" class={path-description} style="margin-left: 7px;"> {pathAddress} </div> </div> </div> </div>';
+    var deliveredDetailTemplate =
+      '<div data-v-21bdb846=""> <div data-v-21bdb846="" style="display: flex; align-items: center;"> <div data-v-21bdb846="" style="width: 180px; text-align: end; margin-right: 30px;"> <div data-v-21bdb846=""> {time} </div> </div> <div data-v-21bdb846="" style="display: flex; align-items: center;"> <svg data-v-21bdb846="" class={dot-border-current} width="12" height="12" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg"> <circle cx="6" cy="6" r="6" fill="#FF9E46" /> </svg> <svg data-v-21bdb846="" class={dot-border} width="10" height="10" viewBox="0 0 10 10" fill="none" xmlns="http://www.w3.org/2000/svg"> <path fill-rule="evenodd" clip-rule="evenodd" d="M8.97095 2.27901C9.093 2.40104 9.09302 2.59891 8.97099 2.72096L3.97169 7.72095C3.84966 7.843 3.65181 7.84302 3.52976 7.721L1.02906 5.221C0.907004 5.09898 0.906976 4.90112 1.029 4.77906C1.15102 4.657 1.34888 4.65698 1.47094 4.779L3.75066 7.05807L8.52901 2.27904C8.65104 2.157 8.84891 2.15698 8.97095 2.27901Z" fill="#FF9E46" /> </svg> <div data-v-21bdb846="" class="status-title"> {pathInfo}. </div> </div> </div> <div data-v-21bdb846="" style="display: flex;"> <div data-v-21bdb846="" style="width: 180px; text-align: end; margin-right: 30px;"> {date} </div>  <div data-v-21bdb846=""> <div data-v-21bdb846="" class={path-description} style="margin-left: 7px;"> {pathAddress} <br data-v-21bdb846=""> <div class="view-pod-style" id="myBtn" onclick="openModal({item_tracking_no});">View Delivery Confirmation</div></div></div> </div> </div>';
+
+    if (!isPieces) {
+      isTicketGlobal[index] = false;
+      ticketDetailList[index] = [];
+      ticketMasterList[index] = "";
+      ticketDeliveredList[index] = "";
+      overviewTemplate = overviewTemplate.replace(
+        "{id-name}",
+        "detail_" + index + "",
+      );
+      overviewTemplate = overviewTemplate.replace(
+        "{arrow-down-name}",
+        "arrow_down_detail_" + index + "",
+      );
+    } else {
+      overviewTemplate = overviewTemplate.replace(
+        "{id-name}",
+        "detail_" + index + "_" + pieceIndex,
+      );
+      overviewTemplate = overviewTemplate.replace(
+        "{arrow-down-name}",
+        "arrow_down_detail_" + index + "_" + pieceIndex,
+      );
+    }
+
+    if (resValid.state === 190) {
+      overviewTemplate = overviewTemplate.replace(
+        "{item-dot-overview}",
+        "item-dot-overview-yellow",
+      );
+      overviewTemplate = overviewTemplate.replace(
+        "{item-dot-overview}",
+        "item-dot-overview-yellow",
+      );
+    } else if (resValid.state === 203) {
+      overviewTemplate = overviewTemplate.replace(
+        "{item-dot-overview}",
+        "item-dot-overview-green",
+      );
+      overviewTemplate = overviewTemplate.replace(
+        "{item-dot-overview}",
+        "item-dot-overview-green",
+      );
+    } else {
+      overviewTemplate = overviewTemplate.replace(
+        "{item-dot-overview}",
+        "item-dot-overview-blue",
+      );
+      overviewTemplate = overviewTemplate.replace(
+        "{item-dot-overview}",
+        "item-dot-overview-blue",
+      );
+    }
+
+    if (pieceIndex === 0 && isPieces) {
+      overviewTemplate = overviewTemplate.replace(
+        "{overview}",
+        "overview-first",
+      );
+    } else {
+      overviewTemplate = overviewTemplate.replace("{overview}", "overview");
+    }
+
+    deliveredDetailTemplate = deliveredDetailTemplate.replace(
+      "{item_tracking_no}",
+      index,
+    );
+    overviewTemplate = overviewTemplate.replace(
+      "{item_tracking_no}",
+      resValid.tno,
+    );
+
+    data = resValid.spath_list;
+    overviewTemplate = overviewTemplate.replace(
+      "{item_latest_status}",
+      data[data.length - 1].pathInfo,
+    );
+    overviewTemplate = overviewTemplate.replace(
+      "{item_latest_status}",
+      data[data.length - 1].pathInfo,
+    );
+
+    var detailList = "";
+    for (var i = data.length - 1; i >= 0; i--) {
+      var item = data[i];
+      var detail = "";
+
+      if (item.state === 192 || item.state === 198) {
+        detail = detailTemplate
+          .replace("{pathInfo}", item.pathInfo)
+          .replace("{time}", formatTimeCST(item.pathTime).time)
+          .replace("{date}", formatTimeCST(item.pathTime).date)
+          .replace("{pathAddress}", item.pathAddress);
+      } else if (item.state === 203) {
+        detail = deliveredDetailTemplate
+          .replace("{pathInfo}", item.pathInfo)
+          .replace("{time}", formatTime(item.pathTime).time)
+          .replace("{date}", formatTime(item.pathTime).date)
+          .replace("{pathAddress}", item.pathAddress);
+      } else if (!item.pathTime) {
+        if (type === "ltian") {
+          let time = item.dateTime.localTime.split(" ")[1];
+          let date = item.dateTime.localTime.split(" ")[0];
+          detail = detailTemplate
+            .replace("{pathInfo}", item.pathInfo)
+            .replace("{time}", time)
+            .replace("{date}", date)
+            .replace("{pathAddress}", item.pathAddress);
+        } else {
+          detail = detailTemplate
+            .replace("{pathInfo}", item.content)
+            .replace("{time}", formatTimeStrCST(item.time).time)
+            .replace("{date}", formatTimeStrCST(item.time).date)
+            .replace("{pathAddress}", item.location);
+        }
+      } else {
+        if (item.state === 190) {
+          detail = detailTemplate
+            .replace("{pathInfo}", item.pathInfo)
+            .replace("{time}", formatTime(item.pathTime).time)
+            .replace("{date}", formatTime(item.pathTime).date + " (UTC)")
+            .replace("{pathAddress}", item.pathAddress);
+        } else {
+          detail = detailTemplate
+            .replace("{pathInfo}", item.pathInfo)
+            .replace("{time}", formatTime(item.pathTime).time)
+            .replace("{date}", formatTime(item.pathTime).date)
+            .replace("{pathAddress}", item.pathAddress);
+        }
+      }
+
+      if (i == data.length - 1) {
+        detail = detail.replace("{dot-border-current}", "dot-border-current");
+        detail = detail.replace("{dot-border}", "hide");
+      } else {
+        detail = detail.replace("{dot-border}", "dot-border");
+        detail = detail.replace("{dot-border-current}", "hide");
+      }
+      if (i == 0) {
+        detail = detail.replace("{path-description}", "path-description-last");
+      } else {
+        detail = detail.replace("{path-description}", "path-description");
+      }
+      detailList = detailList + detail;
+    }
+
+    // 		let elem = document.getElementById("search-button");
+    // 		if (elem) {
+    // 			elem.scrollIntoView({behavior: 'smooth', block: 'start'});
+    // 		}
+
+    // Show imageList
+    // getOrderImage(no);
+
+    var displayEstimate = false;
+    if (resValid.partner_id === 36) {
+      if (resValid.state === 199) {
+        displayEstimate = true;
+      }
+    } else if (resValid.state === 202) {
+      // 			displayEstimate = true;
+    }
+
+    var weekdays = [
+      "Sunday ",
+      "Monday ",
+      "Tuesday ",
+      "Wednesday ",
+      "Thursday ",
+      "Friday ",
+      "Saturday ",
+    ];
+    var months = [
+      "Jan",
+      "Feb",
+      "Mar",
+      "Apr",
+      "May",
+      "Jun",
+      "Jul",
+      "Aug",
+      "Sep",
+      "Oct",
+      "Nov",
+      "Dec",
+    ];
+
+    // Get estimate delivery date
+    var dateStr = "";
+    if (resValid.estimate_time) {
+      var dateReplace = resValid.estimate_time.replaceAll("-", "/");
+      var dateTemp = new Date(dateReplace);
+      var dateWeekday = weekdays[dateTemp.getDay()];
+      var dateMonth = months[dateTemp.getMonth()];
+      var dateDay = " " + dateTemp.getDate();
+      var dateYear = ", " + dateTemp.getFullYear();
+      dateStr = dateWeekday + dateMonth + dateDay + dateYear;
+    } else {
+      displayEstimate = false;
+    }
+
+    const contactTemplate =
+      '<div style="font-size: 18px; margin-top: 20px;" > <a href="https://www.uniuni.com/support/" class="link-class"> Contact Customer Service</a> for Help </div>';
+    if (displayEstimate) {
+      estimateTimeTemplate = estimateTimeTemplate.replace(
+        "{estimatedTime}",
+        dateStr,
+      );
+      detailList =
+        '<div id="{id}" style="display: none; margin-left: 60px;">' +
+        estimateTimeTemplate +
+        '<div data-v-21bdb846="" style="margin-top:10px; margin-bottom:40px">' +
+        detailList +
+        contactTemplate +
+        "</div>" +
+        "</div>";
+    } else {
+      detailList =
+        '<div id="{id}" style="display: none; margin-left: 60px;">' +
+        '<div data-v-21bdb846="" style="margin-top:10px; margin-bottom:40px">' +
+        detailList +
+        contactTemplate +
+        "</div>" +
+        "</div>";
+    }
+
+    if (isPieces) {
+      detailList = detailList.replace(
+        "{id}",
+        "detail_" + index + "_" + pieceIndex,
+      );
+    } else {
+      detailList = detailList.replace("{id}", "detail_" + index + "");
+    }
+
+    return overviewTemplate + detailList;
+  }
+
+  function track() {
+    trackingHideDetail();
+    jQuery(".tracking-images").html("");
+    var no = document.getElementById("input-track").value;
+    if (!no) {
+      no = document.getElementById("input-track-mobile").value;
+    }
+    no = no.toString();
+    no = no.replaceAll(/\r?\n|\r/g, ",");
+    no = no.replaceAll(/\s+/g, ",");
+    if (no == null || typeof no == "undefined" || no.length == 0) {
+      // alert("Please input tracking number.");
+      jQuery("#tracking-alert").show();
+      exist = true;
+      return;
+    }
+    jQuery("#loader-group").show();
+    jQuery.ajax({
+      type: "get",
+      dataType: "json",
+      // url: "/uniapi/track.php",
+      // data: {"no": no},
+      url:
+        "https://delivery-api.uniuni.ca/cargo/trackinguniuninew?id=" +
+        no +
+        "&key=SMq45nJhQuNR3WHsJA6N",
+      success: function (response) {
+        if (
+          response == null ||
+          typeof response == "undefined" ||
+          typeof response.status == "undefined" ||
+          response.status != "SUCCESS"
+        ) {
+          jQuery("#loader-group").hide();
+          jQuery("#tracking-exceed-alert").show();
+          return;
+        }
+        var resValid = response.data.valid_tno;
+        currentResValid = resValid;
+        var resInvalid = response.data.invalid_tno;
+        var trackingList = "";
+        var exportList = "";
+        var inValidTemplate =
+          '<div data-v-21bdb846="" class="invalid-overview-all" style="margin-top: 20px;"> <div data-v-21bdb846="" id="invalid-overview"><div data-v-21bdb846="" class="invalid-content"> <div data-v-21bdb846="" class="invalid-title">Alert</div> <div data-v-21bdb846="" class="invalid-info">No information for the following package(s) is currently available. Please verify you have entered the correct number. It may also be that UniUni has not yet received the package information from the vendor. Please allow up to a few days and try again, or contact <a data-v-21bdb846="" href="https://www.uniuni.com/support/" class="link-class"> Customer Service </a> for assistance.</div> <div data-v-21bdb846="" class="invalid-tno"> {invalidTno} </div></div> </div> <div data-v-21bdb846="" class="invalid-img"> <img src="https://cdn.uniuni.com/wp-content/uploads/2023/07/invalid-search.png" /> </div> </div>';
+
+        if (resValid?.length > 0) {
+          resValid.forEach((res, i) => {
+            let spathLength = res.spath_list?.length;
+            if (res.master_tno) {
+              spathLength = res.orders_list.length;
+            }
+
+            if (spathLength) {
+              if (!res.master_tno) {
+                trackingList += trackRes(res, i, res.urlType);
+                var exportExcelTableTemplate =
+                  "<tr><th>{tno}</th><th>{city}</th><th>{latest_time}</th><th>{latest_track}</th><th>{tracking_info}</th></tr>";
+                exportExcelTableTemplate = exportExcelTableTemplate.replace(
+                  "{tno}",
+                  res.tno,
+                );
+                exportExcelTableTemplate = exportExcelTableTemplate.replace(
+                  "{city}",
+                  res.spath_list[spathLength - 1].pathAddress,
+                );
+                exportExcelTableTemplate = exportExcelTableTemplate.replace(
+                  "{latest_time}",
+                  res.spath_list[spathLength - 1]?.dateTime?.localTime,
+                );
+                exportExcelTableTemplate = exportExcelTableTemplate.replace(
+                  "{latest_track}",
+                  res.spath_list[spathLength - 1].pathInfo,
+                );
+                exportExcelTableTemplate = exportExcelTableTemplate.replace(
+                  "{tracking_info}",
+                  res.full_spath_info,
+                );
+                exportList += exportExcelTableTemplate;
+              } else {
+                res.selected_tno.split(",").forEach((tno) => {
+                  trackingList += trackTickets(res, i, false, tno);
+                });
+                res.orders_list.forEach((order, i) => {
+                  let length = order.spath_list.length;
+                  var exportExcelTableTemplate =
+                    "<tr><th>{tno}</th><th>{city}</th><th>{latest_time}</th><th>{latest_track}</th><th>{tracking_info}</th></tr>";
+                  exportExcelTableTemplate = exportExcelTableTemplate.replace(
+                    "{tno}",
+                    order.tno,
+                  );
+                  exportExcelTableTemplate = exportExcelTableTemplate.replace(
+                    "{city}",
+                    order.spath_list[length - 1].pathAddress,
+                  );
+                  exportExcelTableTemplate = exportExcelTableTemplate.replace(
+                    "{latest_time}",
+                    order.spath_list[length - 1]?.dateTime?.localTime,
+                  );
+                  exportExcelTableTemplate = exportExcelTableTemplate.replace(
+                    "{latest_track}",
+                    order.spath_list[length - 1].pathInfo,
+                  );
+                  exportExcelTableTemplate = exportExcelTableTemplate.replace(
+                    "{tracking_info}",
+                    order.full_spath_info,
+                  );
+                  exportList += exportExcelTableTemplate;
+                });
+              }
+            } else {
+              if (resInvalid) {
+                resInvalid += "," + res.tno;
+              } else {
+                resInvalid = res.tno;
+              }
+            }
+          });
+        }
+        if (resInvalid) {
+          let invalidArr = resInvalid.split(",");
+          let tnos = "";
+          invalidArr.forEach((tno) => {
+            let invalidTemplate =
+              '<div data-v-21bdb846="" style="display: flex; align-items: center;" > &bull; {invalid} </div>';
+            invalidTemplate = invalidTemplate.replace("{invalid}", tno);
+            tnos += invalidTemplate;
+          });
+          inValidTemplate = inValidTemplate.replace("{invalidTno}", tnos);
+        }
+
+        jQuery("#excel-table-body").html(exportList);
+
+        if (resInvalid) {
+          jQuery(".tracking-list").html(trackingList + inValidTemplate);
+        } else {
+          jQuery(".tracking-list").html(trackingList);
+        }
+
+        jQuery("#parcel-overall-title-num").html(
+          (resValid?.length || 0) + " Tracking result(s)",
+        );
+        jQuery(".content-small").css("display", "block");
+        jQuery("#tracking-detail").show();
+        jQuery("#parcel-overall-title-num").show();
+        jQuery("#excel-table").show();
+        jQuery("#loader-group").hide();
+      },
+      error: function (err) {
+        jQuery("#tracking-alert").show();
+        jQuery("#loader-group").hide();
+        return;
+      },
+    });
+  }
+
+  function openModal(index) {
+    currentNo = currentResValid[index].tno;
+    jQuery(".wrong-zip").hide();
+    jQuery("#myModal").show();
+  }
+
+  function closeModal() {
+    jQuery("#myModal").hide();
+  }
+
+  function closePOD() {
+    jQuery("#myPOD").hide();
+  }
+
+  function redirect_to_track() {
+    var no = jQuery("#input-track").val();
+    if (typeof no == "undefined") {
+      no = "";
+    }
+    no = no.toString();
+    no = no.replaceAll(/\r?\n|\r/g, ",");
+    no = no.replaceAll(/\s+/g, ",");
+    window.location.href =
+      window.location.href + "/tracking#tracking-detail?no=" + no;
+  }
+
+  function handleTextAreaClick() {
+    document.querySelector("#input-track-wrap").classList.add("active");
+    document.querySelector("#input-track").rows = "6";
+  }
+</script>
+
+<style>
+  .track-wrap {
+    position: relative;
+    width: 575px;
+    z-index: 1;
+    margin-top: 60px;
+  }
+
+  .track-input-wrap {
+    border: none;
+    padding: 10px;
+    margin-bottom: 20px;
+    border-radius: 12px;
+    display: flex;
+    gap: 15px;
+    align-items: flex-start;
+    font-family: Arial, sans-serif;
+    box-shadow: 0px 1px 26.9px 0px #d9e7f0;
+    background-color: white;
+  }
+
+  .track-input-wrap.active {
+    border: 1px solid #f79045;
+  }
+
+  #input-track {
+    flex: 1;
+    padding: 12px;
+    border: 0px;
+    border-radius: 8px;
+    font-size: 15px;
+    resize: none;
+    color: #101820;
+    font-family: Poppins;
+  }
+
+  #input-track::placeholder {
+    color: #a1a1a1;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  #input-track:focus {
+    outline: none;
+    box-shadow: none;
+  }
+
+  .hint {
+    font-weight: 400;
+    font-size: 16px;
+    color: #f79045;
+    font-family: Poppins;
+  }
+
+  .track-btn {
+    background: linear-gradient(to right, #ffc000, #ff893d);
+    border: none;
+    color: #fff;
+    cursor: pointer;
+    font-weight: 500;
+    font-size: 16px;
+    font-family: Poppins;
+  }
+  .track-btn.desktop {
+    border-radius: 10px;
+    width: 168px;
+    padding: 10px 0;
+    margin-top: 5px;
+  }
+  .track-btn.mobile {
+    border-radius: 12px;
+    width: 100%;
+    height: 38px;
+    margin-top: 20px;
+    display: none;
+  }
+
+  .track-btn:hover {
+    opacity: 0.9;
+  }
+
+  @media only screen and (min-width: 900px) {
+    #input-zip[data-v-21bdb846] {
+      margin-top: 15px;
+      padding: 10px;
+      border-radius: 4px;
+      border: 1px #cccccc solid;
+      width: 407px;
+      color: black;
+      background-color: transparent;
+      margin-left: auto;
+      margin-right: auto;
+      display: block;
+    }
+
+    .title-style {
+      font-size: 20px;
+      font-weight: 500;
+      width: 409px;
+      text-align: center;
+      color: #000;
+      margin-left: auto;
+      margin-right: auto;
+    }
+
+    .notice-content {
+      background: rgb(255, 255, 255);
+      border-width: 0px;
+      border-style: none;
+      border-color: rgb(41, 43, 44);
+      min-width: 759px;
+      min-height: 460px;
+      border-radius: 0px;
+      box-shadow: rgb(0 0 0 / 20%) 0px 0px 24px 0px;
+      width: 759px;
+      margin-left: auto;
+      margin-right: auto;
+      text-align: left;
+      border-top: 18px solid #ff9e46;
+      font-family: "Poppins" !important;
+      padding-bottom: 40px;
+      border-radius: 10px;
+    }
+
+    .notice-para {
+      margin-top: 20px;
+      font-size: 18px;
+      padding-left: 70px;
+      padding-right: 70px;
+    }
+
+    .notice-para-text {
+      font-size: 18px;
+      padding-left: 70px;
+      padding-right: 70px;
+    }
+
+    .notice-type {
+      margin-top: 40px;
+      font-size: 18px;
+      color: #ff9e46;
+      font-weight: 600;
+      text-align: center;
+    }
+
+    .notice-title {
+      margin-top: 40px;
+      font-size: 18px;
+    }
+
+    #alert-button {
+      font-size: 15px;
+      font-weight: 500;
+      background-color: transparent;
+      color: #ff9e46;
+      border-radius: 5px;
+      line-height: 1;
+      width: fit-content;
+      transition: transform 0.2s;
+      z-index: 999;
+      cursor: pointer;
+      padding-left: 0px;
+      text-decoration: underline;
+    }
+  }
+
+  @media only screen and (max-width: 899px) {
+    .hint {
+      font-size: 12px;
+    }
+    .track-btn.desktop {
+      display: none;
+    }
+    .track-btn.mobile {
+      display: block;
+    }
+    .track-wrap {
+      width: 100%;
+      margin-top: 0px;
+    }
+
+    #input-zip[data-v-21bdb846] {
+      margin-top: 15px;
+      padding: 10px;
+      border-radius: 4px;
+      border: 1px #cccccc solid;
+      width: 307px;
+      color: black;
+      background-color: transparent;
+      margin-left: auto;
+      margin-right: auto;
+      display: block;
+    }
+
+    .notice-content {
+      background: rgb(255, 255, 255);
+      border-width: 0px;
+      border-style: none;
+      border-color: rgb(41, 43, 44);
+      min-width: 360px;
+      min-height: 400px;
+      border-radius: 0px;
+      box-shadow: rgb(0 0 0 / 20%) 0px 0px 24px 0px;
+      width: 360px;
+      margin-left: auto;
+      margin-right: auto;
+      text-align: left;
+      border-top: 18px solid #ff9e46;
+      font-family: "Poppins" !important;
+      padding-bottom: 10px;
+      border-radius: 10px;
+    }
+
+    .notice-para {
+      margin-top: 10px;
+      font-size: 13px;
+      padding-left: 20px;
+      padding-right: 20px;
+    }
+
+    .notice-para {
+      font-size: 13px;
+      padding-left: 20px;
+      padding-right: 20px;
+    }
+
+    .notice-type {
+      margin-top: 10px;
+      font-size: 14px;
+      color: #ff9e46;
+      font-weight: 600;
+      text-align: center;
+    }
+
+    .notice-title {
+      margin-top: 30px;
+      font-size: 14px;
+    }
+
+    #alert-button {
+      font-size: 13px;
+      font-weight: 500;
+      background-color: transparent;
+      color: #ff9e46;
+      border-radius: 5px;
+      line-height: 1;
+      width: fit-content;
+      transition: transform 0.2s;
+      z-index: 999;
+      margin-top: 16px;
+      cursor: pointer;
+      padding-left: 0px;
+      text-decoration: underline;
+    }
+  }
+
+  .link-class {
+    text-decoration: underline !important;
+    color: black !important;
+  }
+
+  .link-class:hover {
+    text-decoration: underline !important;
+    color: black !important;
+  }
+
+  .invalid-content {
+  }
+
+  .invalid-title {
+    color: #ff5959;
+    font-size: 60px;
+    font-weight: 600;
+    margin-bottom: 20px;
+  }
+
+  .invalid-info {
+    margin-bottom: 20px;
+  }
+
+  .invalid-tno {
+  }
+
+  .show {
+    display: block;
+  }
+
+  .hide {
+    display: none;
+  }
+
+  @media only screen and (max-width: 699px) {
+    .parcel-detail-status {
+      margin-right: 5px;
+      max-width: 14px;
+    }
+  }
+
+  .parcel-detail-tracking-num {
+    width: 50%;
+  }
+
+  .parcel-detail-info {
+    display: flex;
+    width: 80%;
+    align-items: center;
+    font-size: 24px;
+    color: #999999;
+    font-weight: 600;
+  }
+
+  @media only screen and (min-width: 700px) {
+    .parcel-detail-title {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 20px 60px 20px 60px;
+    }
+  }
+
+  @media only screen and (max-width: 699px) {
+    .parcel-detail-title {
+      display: none;
+    }
+  }
+
+  .parcel-detail-dropdown-action {
+    border: none;
+    cursor: pointer;
+  }
+
+  @media only screen and (min-width: 700px) {
+    .parcel-detail-large {
+      display: block;
+    }
+
+    .parcel-detail-small {
+      display: none;
+    }
+
+    .parcel-detail-dropdown-content {
+      display: none;
+      position: absolute;
+      overflow: auto;
+      box-shadow: 0px 8px 16px 0px rgba(0, 0, 0, 0.2);
+      z-index: 1;
+      border: 2px #ccc solid;
+      margin-top: 2px;
+      border-radius: 5px;
+      width: 123px;
+      background-color: white;
+    }
+
+    .parcel-detail-dropdown-content div {
+      color: black;
+      margin-left: 16px;
+      margin-right: 16px;
+      padding-top: 12px;
+      padding-bottom: 12px;
+      text-decoration: none;
+      display: block;
+      border-bottom: 1px #ccc solid;
+    }
+  }
+
+  @media only screen and (max-width: 699px) {
+    .parcel-detail-large {
+      display: none;
+    }
+
+    .parcel-detail-small {
+      display: block;
+    }
+
+    .parcel-detail-dropdown-content {
+      display: none;
+      position: absolute;
+      overflow: auto;
+      box-shadow: 0px 8px 16px 0px rgba(0, 0, 0, 0.2);
+      z-index: 1;
+      border: 2px #ccc solid;
+      margin-top: 2px;
+      border-radius: 5px;
+      width: 84px;
+      background-color: white;
+    }
+
+    .parcel-detail-dropdown-content div {
+      color: black;
+      margin-left: 6px;
+      margin-right: 6px;
+      padding-top: 6px;
+      padding-bottom: 6px;
+      text-decoration: none;
+      display: block;
+      border-bottom: 1px #ccc solid;
+      background-color: white;
+    }
+  }
+
+  .show {
+    display: block;
+  }
+
+  .parcel-overall-summary[data-v-21bdb846] {
+    width: 100%;
+    display: flex;
+    margin-bottom: 20px;
+    border-top: #c3c3c3 1px solid;
+    padding-top: 40px;
+  }
+
+  .parcel-overall-summary-left[data-v-21bdb846] {
+    display: flex;
+    font-weight: 600;
+    width: 60%;
+    align-items: center;
+  }
+
+  .parcel-overall-summary-left-content[data-v-21bdb846] {
+    margin-left: 10px;
+    margin-right: 10px;
+    color: black;
+  }
+
+  .parcel-overall-summary-right[data-v-21bdb846] {
+    color: grey;
+    font-weight: 600;
+    width: 20%;
+    margin-left: 10px;
+  }
+
+  .parcel-overall-content {
+    -webkit-text-size-adjust: 100%;
+    -webkit-tap-highlight-color: rgba(0, 0, 0, 0);
+    --blue: #007bff;
+    --indigo: #6610f2;
+    --purple: #6f42c1;
+    --pink: #e83e8c;
+    --red: #dc3545;
+    --orange: #fd7e14;
+    --yellow: #ffc107;
+    --green: #28a745;
+    --teal: #20c997;
+    --cyan: #17a2b8;
+    --white: #fff;
+    --gray: #6c757d;
+    --gray-dark: #343a40;
+    --primary: #007bff;
+    --secondary: #6c757d;
+    --success: #28a745;
+    --info: #17a2b8;
+    --warning: #ffc107;
+    --danger: #dc3545;
+    --light: #f8f9fa;
+    --dark: #343a40;
+    --breakpoint-xs: 0;
+    --breakpoint-sm: 576px;
+    --breakpoint-md: 768px;
+    --breakpoint-lg: 992px;
+    --breakpoint-xl: 1200px;
+    --font-family-sans-serif:
+      -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue",
+      Arial, "Noto Sans", sans-serif, "Apple Color Emoji", "Segoe UI Emoji",
+      "Segoe UI Symbol", "Noto Color Emoji";
+    --font-family-monospace:
+      SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New",
+      monospace;
+    font-size: 1rem;
+    font-weight: 400;
+    line-height: 1.5;
+    color: #212529;
+    text-align: left;
+    font-family: "Poppins";
+    width: 100%;
+    box-sizing: border-box;
+    border-bottom: 1px solid #c3c3c3;
+    margin-bottom: 100px;
+  }
+
+  .piece-overview[data-v-21bdb846] {
+    display: flex;
+    align-items: center;
+  }
+
+  .piece-title[data-v-21bdb846] {
+    font-size: 16px;
+    font-weight: 500;
+    text-decoration: underline;
+    margin-left: 5px;
+    margin-right: 5px;
+  }
+
+  @media only screen and (min-width: 700px) {
+  }
+
+  @media only screen and (max-width: 699px) {
+  }
+
+  /* Tooltip container */
+  .svg-tooltip {
+    position: relative;
+    display: inline-block;
+  }
+
+  @media only screen and (min-width: 700px) {
+    #tooltip-left {
+      margin-right: 30px;
+    }
+
+    /* Tooltip text */
+    .svg-tooltip .tooltiptext {
+      font-size: 14px;
+      visibility: hidden;
+      width: 80px;
+      background-color: #efefef;
+      color: black;
+      text-align: center;
+      padding: 5px 1px;
+      border-radius: 17px;
+      position: absolute;
+      z-index: 1;
+      top: 110%;
+      left: 50%;
+      margin-left: -40px;
+    }
+
+    .svg-tooltip:hover .tooltiptext {
+      visibility: visible;
+    }
+
+    .loading-text[data-v-21bdb846] {
+      color: white;
+      font-size: 28px;
+      line-height: 42px;
+      margin-right: 16px;
+    }
+
+    .yuan1[data-v-21bdb846] {
+      width: 16px;
+      height: 16px;
+      background-color: #fff0d8;
+      border-radius: 10px;
+      animation: change 1s 0.5s linear infinite alternate;
+      margin-right: 8px;
+    }
+
+    .yuan2[data-v-21bdb846] {
+      width: 16px;
+      height: 16px;
+      background-color: #fce2ba;
+      border-radius: 10px;
+      animation: change 1s 0.7s linear infinite alternate;
+      margin-right: 8px;
+    }
+
+    .yuan3[data-v-21bdb846] {
+      width: 16px;
+      height: 16px;
+      background-color: #fdc05e;
+      border-radius: 10px;
+      animation: change 1s 0.9s linear infinite alternate;
+      margin-right: 8px;
+    }
+
+    .yuan4[data-v-21bdb846] {
+      width: 16px;
+      height: 16px;
+      background-color: #fcae32;
+      border-radius: 10px;
+      animation: change 1s 1.1s linear infinite alternate;
+      margin-right: 8px;
+    }
+
+    .yuan5[data-v-21bdb846] {
+      width: 16px;
+      height: 16px;
+      background-color: #ff9d00;
+      border-radius: 10px;
+      animation: change 1s 1.3s linear infinite alternate;
+    }
+  }
+
+  @media only screen and (max-width: 699px) {
+    #tooltip-left {
+      margin-right: 10px;
+    }
+
+    .svg-tooltip .tooltiptext {
+      font-size: 9px;
+      visibility: hidden;
+      width: 60px;
+      background-color: #efefef;
+      color: black;
+      text-align: center;
+      padding: 3px 1px;
+      border-radius: 17px;
+      position: absolute;
+      z-index: 1;
+      bottom: 110%;
+      left: 50%;
+      margin-left: -30px;
+    }
+
+    .svg-tooltip:hover .tooltiptext {
+      visibility: visible;
+    }
+
+    .loading-text[data-v-21bdb846] {
+      color: white;
+      font-size: 13px;
+      line-height: 29px;
+      margin-right: 16px;
+    }
+
+    .yuan1[data-v-21bdb846] {
+      width: 6px;
+      height: 6px;
+      background-color: #fff0d8;
+      border-radius: 10px;
+      animation: change 1s 0.5s linear infinite alternate;
+      margin-right: 6px;
+    }
+
+    .yuan2[data-v-21bdb846] {
+      width: 6px;
+      height: 6px;
+      background-color: #fce2ba;
+      border-radius: 10px;
+      animation: change 1s 0.7s linear infinite alternate;
+      margin-right: 6px;
+    }
+
+    .yuan3[data-v-21bdb846] {
+      width: 6px;
+      height: 6px;
+      background-color: #fdc05e;
+      border-radius: 10px;
+      animation: change 1s 0.9s linear infinite alternate;
+      margin-right: 6px;
+    }
+
+    .yuan4[data-v-21bdb846] {
+      width: 6px;
+      height: 6px;
+      background-color: #fcae32;
+      border-radius: 10px;
+      animation: change 1s 1.1s linear infinite alternate;
+      margin-right: 6px;
+    }
+
+    .yuan5[data-v-21bdb846] {
+      width: 6px;
+      height: 6px;
+      background-color: #ff9d00;
+      border-radius: 10px;
+      animation: change 1s 1.3s linear infinite alternate;
+    }
+  }
+
+  #loader-group[data-v-21bdb846] {
+    position: fixed;
+    /* Stay in place */
+    left: 0;
+    top: 0;
+    width: 100%;
+    /* Full width */
+    height: 100%;
+    /* Full height */
+    background-color: rgb(0, 0, 0);
+    /* Fallback color */
+    background-color: rgba(0, 0, 0, 0.8);
+    /* Black w/ opacity */
+    overflow: auto;
+    z-index: 1000;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+  }
+
+  .loader-content[data-v-21bdb846] {
+    display: flex;
+    align-items: center;
+    width: fit-content;
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  @keyframes change {
+    0% {
+      transform: scale(1);
+    }
+
+    100% {
+      transform: scale(0);
+    }
+  }
+
+  .tracking-alert-style[data-v-21bdb846] {
+    color: #e15548;
+    width: 100%;
+    background-color: white;
+    font-size: 16px;
+    height: 36px;
+    line-height: 36px;
+    padding-left: 10px;
+    border-radius: 5px;
+    border-left: 10px solid #e15548;
+    margin-top: 10px;
+    z-index: 1000;
+    display: flex;
+    justify-content: space-between;
+  }
+
+  @media only screen and (min-width: 700px) {
+    .invalid-content[data-v-21bdb846] {
+      word-wrap: break-word;
+      max-width: 600px;
+    }
+
+    .invalid-overview-all[data-v-21bdb846] {
+      background-color: #ffeeee;
+      width: 100%;
+      border-radius: 10px;
+      padding-left: 60px;
+      padding-top: 20px;
+      padding-bottom: 20px;
+      display: flex;
+      justify-content: space-between;
+    }
+
+    #invalid-overview[data-v-21bdb846] {
+      width: 100%;
+    }
+
+    .invalid-title-content[data-v-21bdb846] {
+      font-weight: 600;
+    }
+
+    .invalid-title[data-v-21bdb846] {
+      display: flex;
+    }
+
+    .svg-style-mobile[data-v-21bdb846] {
+      display: none;
+    }
+
+    .svg-style-hover-mobile[data-v-21bdb846] {
+      display: none;
+    }
+
+    .svg-style-web[data-v-21bdb846] {
+      margin-left: auto;
+      margin-right: auto;
+      display: block;
+    }
+
+    .svg-style-hover-web[data-v-21bdb846] {
+      display: none;
+    }
+
+    .svg-tooltip[data-v-21bdb846]:hover .svg-style-web[data-v-21bdb846] {
+      display: none;
+    }
+
+    .svg-tooltip[data-v-21bdb846]:hover .svg-style-hover-web[data-v-21bdb846] {
+      margin-left: auto;
+      margin-right: auto;
+      display: block;
+    }
+
+    .svg-tooltip[data-v-21bdb846]:hover {
+      cursor: pointer;
+      padding: 1px;
+      width: 34px;
+      height: 34px;
+      display: flex;
+      align-items: center;
+      flex-direction: column;
+    }
+
+    .svg-tooltip[data-v-21bdb846] {
+      padding: 6px;
+      width: 34px;
+      height: 34px;
+      display: flex;
+      align-items: center;
+      flex-direction: column;
+    }
+  }
+
+  @media only screen and (max-width: 699px) {
+    .invalid-content[data-v-21bdb846] {
+      word-wrap: break-word;
+      max-width: 300px;
+    }
+
+    .invalid-overview-all[data-v-21bdb846] {
+      background-color: #ffeeee;
+      width: 100%;
+      border-radius: 10px;
+      padding-left: 20px;
+      padding-top: 20px;
+      padding-bottom: 20px;
+      display: flex;
+      justify-content: space-between;
+    }
+
+    #invalid-overview[data-v-21bdb846] {
+      width: 100%;
+    }
+
+    .invalid-title-content[data-v-21bdb846] {
+      font-weight: 600;
+    }
+
+    .invalid-title[data-v-21bdb846] {
+      display: flex;
+    }
+
+    .svg-style-web[data-v-21bdb846] {
+      display: none;
+    }
+
+    .svg-style-hover-web[data-v-21bdb846] {
+      display: none;
+    }
+
+    .svg-style-mobile[data-v-21bdb846] {
+      margin-left: auto;
+      margin-right: auto;
+      display: block;
+    }
+
+    .svg-style-hover-mobile[data-v-21bdb846] {
+      display: none;
+    }
+
+    .svg-tooltip[data-v-21bdb846]:hover .svg-style-mobile[data-v-21bdb846] {
+      display: none !important;
+    }
+
+    .svg-tooltip[data-v-21bdb846]:hover
+      .svg-style-hover-mobile[data-v-21bdb846] {
+      margin-left: auto;
+      margin-right: auto;
+      display: block !important;
+    }
+
+    .svg-tooltip[data-v-21bdb846]:hover {
+      cursor: pointer;
+      padding: 1px;
+      width: 28px;
+      height: 28px;
+      display: flex;
+      align-items: center;
+      flex-direction: column;
+    }
+
+    .svg-tooltip[data-v-21bdb846] {
+      padding: 6px;
+      width: 28px;
+      height: 28px;
+      display: flex;
+      align-items: center;
+      flex-direction: column;
+    }
+  }
+
+  #excel-table[data-v-21bdb846] {
+    opacity: 0;
+  }
+
+  @media only screen and (min-width: 700px) {
+    .item-dot[data-v-21bdb846] {
+      color: #ff9d00;
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      display: inline-block;
+      background-color: #ff9d00;
+      display: block;
+      padding: 1px;
+    }
+
+    .dot-border-current[data-v-21bdb846] {
+      border-radius: 50%;
+      color: #ff9d00;
+      width: 18px;
+      height: 16px;
+      border-radius: 50%;
+      border: 1px solid #ff9d00;
+      padding: 1px;
+      background-color: #ff9d00;
+      display: block;
+    }
+
+    .dot-border[data-v-21bdb846] {
+      color: #ff9d00;
+      width: 18px;
+      height: 16px;
+      border-radius: 50%;
+      border: 1px solid #ff9d00;
+      display: block;
+      padding: 1px;
+    }
+
+    .status-title {
+      -webkit-text-size-adjust: 100%;
+      -webkit-tap-highlight-color: rgba(0, 0, 0, 0);
+      --blue: #007bff;
+      --indigo: #6610f2;
+      --purple: #6f42c1;
+      --pink: #e83e8c;
+      --red: #dc3545;
+      --orange: #fd7e14;
+      --yellow: #ffc107;
+      --green: #28a745;
+      --teal: #20c997;
+      --cyan: #17a2b8;
+      --white: #fff;
+      --gray: #6c757d;
+      --gray-dark: #343a40;
+      --primary: #007bff;
+      --secondary: #6c757d;
+      --success: #28a745;
+      --info: #17a2b8;
+      --warning: #ffc107;
+      --danger: #dc3545;
+      --light: #f8f9fa;
+      --dark: #343a40;
+      --breakpoint-xs: 0;
+      --breakpoint-sm: 576px;
+      --breakpoint-md: 768px;
+      --breakpoint-lg: 992px;
+      --breakpoint-xl: 1200px;
+      --font-family-sans-serif:
+        -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue",
+        Arial, "Noto Sans", sans-serif, "Apple Color Emoji", "Segoe UI Emoji",
+        "Segoe UI Symbol", "Noto Color Emoji";
+      --font-family-monospace:
+        SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono",
+        "Courier New", monospace;
+      font-weight: 600;
+      line-height: 1.5;
+      color: #212529;
+      text-align: left;
+      box-sizing: border-box;
+      width: 99%;
+      padding-left: 30px;
+      font-size: 18px;
+      font-family: "Poppins";
+    }
+
+    .path-description[data-v-21bdb846] {
+      margin-left: 7px;
+      padding-left: 40px;
+      padding-bottom: 30px;
+      border-left: 1px dashed #d9d9d6;
+      font-size: 14px;
+      line-height: 21px;
+      margin-top: 2px;
+    }
+
+    .path-description-last[data-v-21bdb846] {
+      margin-left: 7px;
+      padding-left: 40px;
+      padding-bottom: 30px;
+      border-left: 1px dashed transparent;
+      font-size: 14px;
+      line-height: 21px;
+      margin-top: 2px;
+    }
+
+    .view-pod-style {
+      color: #ff9d00;
+      font-size: 16px;
+      cursor: pointer;
+      font-weight: 600;
+      margin-top: 10px;
+    }
+
+    .overview[data-v-21bdb846] {
+      border-top: #c3c3c3 1px solid;
+      padding-top: 40px;
+      padding-bottom: 40px;
+      width: 100%;
+      display: flex;
+      align-items: end;
+      padding-left: 60px;
+      padding-right: 60px;
+    }
+
+    .overview-first[data-v-21bdb846] {
+      padding-top: 40px;
+      padding-bottom: 40px;
+      width: 100%;
+      display: flex;
+      align-items: center;
+      padding-left: 60px;
+      padding-right: 60px;
+    }
+  }
+
+  @media only screen and (max-width: 699px) {
+    .item-dot[data-v-21bdb846] {
+      color: #ff9d00;
+      width: 9px;
+      height: 9px;
+      border-radius: 50%;
+      display: inline-block;
+      background-color: #ff9d00;
+    }
+
+    .dot-border-current[data-v-21bdb846] {
+      border-radius: 50%;
+      width: 13px;
+      margin-right: 10px;
+      display: block;
+    }
+
+    .dot-border[data-v-21bdb846] {
+      display: block;
+      padding: 1px;
+      border: 1px solid #ff9d00;
+      border-radius: 50%;
+      width: 13px;
+      margin-right: 10px;
+    }
+
+    .status-title {
+      -webkit-text-size-adjust: 100%;
+      -webkit-tap-highlight-color: rgba(0, 0, 0, 0);
+      --blue: #007bff;
+      --indigo: #6610f2;
+      --purple: #6f42c1;
+      --pink: #e83e8c;
+      --red: #dc3545;
+      --orange: #fd7e14;
+      --yellow: #ffc107;
+      --green: #28a745;
+      --teal: #20c997;
+      --cyan: #17a2b8;
+      --white: #fff;
+      --gray: #6c757d;
+      --gray-dark: #343a40;
+      --primary: #007bff;
+      --secondary: #6c757d;
+      --success: #28a745;
+      --info: #17a2b8;
+      --warning: #ffc107;
+      --danger: #dc3545;
+      --light: #f8f9fa;
+      --dark: #343a40;
+      --breakpoint-xs: 0;
+      --breakpoint-sm: 576px;
+      --breakpoint-md: 768px;
+      --breakpoint-lg: 992px;
+      --breakpoint-xl: 1200px;
+      --font-family-sans-serif:
+        -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue",
+        Arial, "Noto Sans", sans-serif, "Apple Color Emoji", "Segoe UI Emoji",
+        "Segoe UI Symbol", "Noto Color Emoji";
+      --font-family-monospace:
+        SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono",
+        "Courier New", monospace;
+      font-weight: 400;
+      line-height: 1.5;
+      color: #212529;
+      text-align: left;
+      box-sizing: border-box;
+      width: 99%;
+      /* 			padding-left: 30px; */
+      font-size: 13px;
+      font-family: "Poppins";
+    }
+
+    .path-description-top[data-v-21bdb846] {
+      padding-left: 18px;
+      margin-left: 5px;
+      padding-bottom: 12px;
+      border-left: 1px dashed #d9d9d6;
+      font-size: 11px;
+      line-height: 16px;
+      margin-top: 6px;
+      border-top: none !important;
+    }
+
+    .path-description[data-v-21bdb846] {
+      padding-left: 18px;
+      margin-left: 5px;
+      padding-bottom: 12px;
+      border-left: 1px dashed #d9d9d6;
+      font-size: 11px;
+      line-height: 16px;
+      margin-top: 6px;
+    }
+
+    .path-description-last[data-v-21bdb846] {
+      padding-left: 18px;
+      margin-left: 5px;
+      padding-bottom: 12px;
+      border-left: 1px dashed transparent;
+      font-size: 11px;
+      line-height: 16px;
+      margin-top: 6px;
+    }
+
+    .view-pod-style {
+      color: #ff9d00;
+      font-size: 13px;
+      cursor: pointer;
+      font-weight: 600;
+      margin-top: 10px;
+    }
+
+    .overview[data-v-21bdb846] {
+      border-top: #c3c3c3 1px solid;
+      padding-top: 24px;
+      padding-bottom: 24px;
+      width: 100%;
+      display: flex;
+      align-items: end;
+      padding-left: 20px;
+      padding-right: 20px;
+    }
+
+    .overview-first[data-v-21bdb846] {
+      padding-top: 24px;
+      padding-bottom: 24px;
+      width: 100%;
+      display: flex;
+      align-items: center;
+      padding-left: 20px;
+      padding-right: 20px;
+    }
+  }
+
+  .overview[data-v-21bdb846]:active {
+    background-color: #fafafa;
+  }
+
+  .overview[data-v-21bdb846]:hover {
+    background-color: #fafafa;
+    cursor: pointer;
+  }
+
+  .overview-first[data-v-21bdb846]:active {
+    background-color: #fafafa;
+  }
+
+  .overview-first[data-v-21bdb846]:hover {
+    background-color: #fafafa;
+    cursor: pointer;
+  }
+
+  @media only screen and (min-width: 700px) {
+    .ticket-overview[data-v-21bdb846] {
+      width: 20%;
+    }
+
+    .tracking-number-overview[data-v-21bdb846] {
+      color: black;
+      font-size: 20px;
+      font-weight: 600;
+      display: flex;
+      width: 40%;
+      align-items: center;
+    }
+
+    .tracking-number-overview-piece[data-v-21bdb846] {
+      color: #fe9d00;
+      font-size: 16px;
+      font-weight: 500;
+      width: 20%;
+      padding-top: 10px;
+    }
+
+    .status-overview[data-v-21bdb846] {
+      font-size: 20px;
+      margin-left: 10px;
+      max-width: 800px;
+    }
+
+    .status-group[data-v-21bdb846] {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .status-group-mobile[data-v-21bdb846] {
+      display: none;
+    }
+
+    .item-dot-overview-blue[data-v-21bdb846] {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      display: inline-block;
+      color: #639ff9;
+      background-color: #639ff9;
+    }
+
+    .item-dot-overview-yellow[data-v-21bdb846] {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      display: inline-block;
+      color: #ffd646;
+      background-color: #ffd646;
+    }
+
+    .item-dot-overview-green[data-v-21bdb846] {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      display: inline-block;
+      color: #28df66;
+      background-color: #28df66;
+    }
+  }
+
+  @media only screen and (max-width: 699px) {
+    .tracking-number-overview[data-v-21bdb846] {
+      color: #fe9d00;
+      font-size: 13px;
+      font-weight: 500;
+      display: flex;
+    }
+
+    .tracking-number-overview-piece[data-v-21bdb846] {
+      color: #fe9d00;
+      font-size: 13px;
+      font-weight: 500;
+      padding-top: 5px;
+    }
+
+    .status-overview[data-v-21bdb846] {
+      font-size: 13px;
+      margin-left: 5px;
+    }
+
+    .status-group[data-v-21bdb846] {
+      display: none;
+    }
+
+    .status-group-mobile[data-v-21bdb846] {
+      display: inline-block !important;
+      font-size: 13px;
+      margin-left: 10px;
+      padding-right: 10px;
+      width: 150px;
+      white-space: pre-wrap;
+      overflow-wrap: break-word;
+    }
+
+    .item-dot-overview-blue[data-v-21bdb846] {
+      width: 9px;
+      height: 9px;
+      border-radius: 50%;
+      margin-left: 30px;
+      display: inline-block !important;
+      color: #639ff9;
+      background-color: #639ff9;
+    }
+
+    .item-dot-overview-yellow[data-v-21bdb846] {
+      width: 9px;
+      height: 9px;
+      border-radius: 50%;
+      margin-left: 30px;
+      display: inline-block !important;
+      color: #ffd646;
+      background-color: #ffd646;
+    }
+
+    .item-dot-overview-green[data-v-21bdb846] {
+      width: 9px;
+      height: 9px;
+      border-radius: 50%;
+      margin-left: 30px;
+      display: inline-block !important;
+      color: #28df66;
+      background-color: #28df66;
+    }
+  }
+
+  @media only screen and (min-width: 600px) {
+    .notice-content {
+      height: 460px;
+      max-height: 460px;
+      background: rgb(255, 255, 255);
+      border-width: 0px;
+      border-style: none;
+      border-color: rgb(41, 43, 44);
+      min-width: 759px;
+      min-height: 460px;
+      border-radius: 0px;
+      box-shadow: rgb(0 0 0 / 20%) 0px 0px 24px 0px;
+      width: 759px;
+      margin-left: auto;
+      margin-right: auto;
+      text-align: left;
+      border-top: 18px solid #fe9d00;
+      font-family: "Poppins" !important;
+    }
+
+    .notice-para {
+      margin-top: 20px;
+      font-size: 18px;
+      padding-left: 70px;
+      padding-right: 70px;
+    }
+
+    .notice-para-text {
+      font-size: 18px;
+      padding-left: 70px;
+      padding-right: 70px;
+    }
+
+    .notice-type {
+      margin-top: 20px;
+      font-size: 18px;
+      color: #fe9d00;
+      font-weight: 600;
+    }
+
+    .notice-title {
+      margin-top: 40px;
+      font-size: 18px;
+    }
+  }
+
+  @media only screen and (max-width: 599px) {
+    .notice-content {
+      max-height: 760px;
+      background: rgb(255, 255, 255);
+      border-width: 0px;
+      border-style: none;
+      border-color: rgb(41, 43, 44);
+      min-width: 360px;
+      min-height: 400px;
+      border-radius: 0px;
+      box-shadow: rgb(0 0 0 / 20%) 0px 0px 24px 0px;
+      width: 360px;
+      margin-left: auto;
+      margin-right: auto;
+      text-align: left;
+      border-top: 18px solid #fe9d00;
+      font-family: "Poppins" !important;
+    }
+
+    .notice-para {
+      margin-top: 10px;
+      font-size: 12px;
+      padding-left: 20px;
+      padding-right: 20px;
+    }
+
+    .notice-para {
+      font-size: 12px;
+      padding-left: 20px;
+      padding-right: 20px;
+    }
+
+    .notice-type {
+      margin-top: 10px;
+      font-size: 14px;
+      color: #fe9d00;
+      font-weight: 600;
+    }
+
+    .notice-title {
+      margin-top: 30px;
+      font-size: 14px;
+    }
+  }
+
+  #button-notice-close {
+    background-color: #ff9e46;
+    line-height: 1;
+    width: 120px;
+    padding: 10px;
+    border-radius: 10px;
+    color: white;
+    cursor: pointer;
+  }
+
+  #alert-button:hover {
+    color: rgb(255, 157, 0);
+    transform: scale(1.1);
+  }
+
+  #alert-button {
+    position: absolute;
+    font-size: 13px;
+    font-weight: 500;
+    background-color: #ffffff;
+    padding: 6px 16px 6px 16px;
+    color: #f94c4c;
+    border-radius: 5px;
+    line-height: 1;
+    width: fit-content;
+    margin-top: 16px;
+    transition: transform 0.2s;
+    z-index: 999;
+  }
+
+  .notice-modal {
+    position: fixed;
+    /* Stay in place */
+    padding-top: 195px;
+    /* Location of the box */
+    padding-bottom: 100px;
+    left: 0;
+    top: 0;
+    width: 100%;
+    /* Full width */
+    height: 100%;
+    /* Full height */
+    background-color: rgb(0, 0, 0);
+    /* Fallback color */
+    background-color: rgba(0, 0, 0, 0.8);
+    /* Black w/ opacity */
+    overflow: auto;
+    z-index: 1000;
+  }
+
+  .pod-pic[data-v-21bdb846] {
+    box-shadow: 0 0 20px 0 rgba(0, 0, 0, 0.25);
+    border: solid 3px #fff;
+    margin-left: 21px;
+    margin-right: 21px;
+  }
+
+  /* The Modal (background) */
+  .modal-pod {
+    position: fixed;
+    /* Stay in place */
+    z-index: 1;
+    /* Sit on top */
+    padding-top: 195px;
+    /* Location of the box */
+    padding-bottom: 100px;
+    left: 0;
+    top: 0;
+    width: 100%;
+    /* Full width */
+    height: 100%;
+    /* Full height */
+    background-color: rgb(0, 0, 0);
+    /* Fallback color */
+    background-color: rgba(0, 0, 0, 0.8);
+    /* Black w/ opacity */
+    overflow: auto;
+  }
+
+  .closePOD {
+    font-size: 44px;
+    color: #fff;
+    border: solid 1px #fff;
+    width: 68px;
+    height: 68px;
+    border-radius: 50%;
+    margin-left: auto;
+    margin-right: auto;
+    text-align: center;
+    cursor: pointer;
+    margin-top: 59px;
+    margin-bottom: 59px;
+    display: inline-block;
+  }
+
+  .pod-content {
+    background-color: transparent;
+    margin: auto;
+    padding: 20px;
+    /*width: 1000px;*/
+    width: 100%;
+    height: 700px;
+    text-align: center;
+  }
+
+  .wrong-zip {
+    width: 409px;
+    font-size: 17px;
+    font-weight: normal;
+    text-align: center;
+    color: #f72121;
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  #button-zip[data-v-21bdb846] {
+    text-align: center;
+    margin-top: 47px;
+    padding-left: 40px;
+    padding-right: 40px;
+    border-radius: 25px;
+    border: solid 2px #ff9d00;
+    background-color: #ff9d00;
+    margin-left: auto;
+    margin-right: auto;
+    font-size: 17px;
+    font-weight: 500;
+    color: #fff;
+    width: 130px;
+    display: block;
+    padding-top: 10px;
+    padding-bottom: 10px;
+  }
+
+  #input-zip[data-v-21bdb846] {
+    margin-top: 15px;
+    padding: 10px;
+    border-radius: 4px;
+    border: 1px #cccccc solid;
+    width: 407px;
+    color: black;
+    background-color: transparent;
+    margin-left: auto;
+    margin-right: auto;
+    display: block;
+  }
+
+  .title-style {
+    font-size: 20px;
+    font-weight: 500;
+    width: 409px;
+    text-align: center;
+    color: #000;
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  /* The Modal (background) */
+  .modal {
+    position: fixed;
+    /* Stay in place */
+    z-index: 1;
+    /* Sit on top */
+    padding-top: 356px;
+    /* Location of the box */
+    left: 0;
+    top: 0;
+    width: 100%;
+    /* Full width */
+    height: 100%;
+    /* Full height */
+    background-color: rgb(0, 0, 0);
+    /* Fallback color */
+    background-color: rgba(0, 0, 0, 0.8);
+    /* Black w/ opacity */
+    overflow: auto;
+  }
+
+  /* Modal Content */
+  .modal-content {
+    background-color: #fefefe;
+    margin: auto;
+    padding: 20px;
+    border: 1px solid #888;
+    width: 629px;
+    height: 310px;
+    border-radius: 0.3rem;
+    outline: 0;
+    background-clip: padding-box;
+  }
+
+  /* The Close Button */
+  .close {
+    color: #aaaaaa;
+    width: 585px;
+    text-align: right;
+    font-size: 28px;
+    display: block;
+    float: right;
+    font-weight: 700;
+    line-height: 1;
+    text-shadow: 0 1px 0 #fff;
+    opacity: 0.5;
+  }
+
+  .close:hover,
+  .close:focus {
+    color: #000;
+    text-decoration: none;
+    cursor: pointer;
+  }
+
+  #estimate-time {
+    margin-top: 10px;
+    font-size: 18px;
+    line-height: 27px;
+    margin-bottom: 40px;
+  }
+
+  .estimate-time-title {
+    font-weight: 500;
+    color: #ff9d00;
+    font-size: 18px;
+    line-height: 27px;
+  }
+
+  .estimate-time-content {
+    font-size: 18px;
+    line-height: 27px;
+    color: #000000;
+  }
+
+  ::placeholder {
+    /* Chrome, Firefox, Opera, Safari 10.1+ */
+    color: white;
+    opacity: 1;
+    /* Firefox */
+  }
+
+  :-ms-input-placeholder {
+    /* Internet Explorer 10-11 */
+    color: white;
+  }
+
+  ::-ms-input-placeholder {
+    /* Microsoft Edge */
+    color: white;
+  }
+
+  #mobile-search-button {
+    margin-bottom: 20px;
+    background-color: black;
+    color: black;
+    width: 100%;
+    font-weight: 500;
+    font-size: 20px;
+    line-height: 24px;
+    padding-top: 6px;
+    padding-bottom: 6px;
+  }
+
+  #table-track[data-v-21bdb846] {
+    width: 100%;
+    margin-bottom: 7px;
+  }
+
+  #tracking-input-group[data-v-21bdb846] {
+    display: block;
+  }
+
+  #td-hint[data-v-21bdb846] {
+    color: #999999;
+    line-height: 2;
+    font-weight: 500;
+  }
+
+  #input-track[data-v-21bdb846] {
+    width: 80%;
+    color: black;
+    resize: none;
+    border-radius: 10px !important;
+    padding: 16px 16px;
+    box-sizing: border-box;
+    border: 1px solid #ccc;
+    background-color: transparent;
+  }
+
+  #input-track[data-v-21bdb846]:hover:active {
+    background-color: white;
+  }
+
+  #input-track-mobile[data-v-21bdb846] {
+    width: 80%;
+    color: black;
+    resize: none;
+    border-radius: 10px !important;
+    padding: 16px 16px;
+    box-sizing: border-box;
+    border: 1px solid #ccc;
+    background-color: transparent;
+  }
+
+  #input-track-mobile[data-v-21bdb846]:hover:active {
+    background-color: white;
+  }
+
+  .td-group[data-v-21bdb846] {
+    margin-top: 10px;
+    display: flex;
+    width: 100%;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  :-ms-input-placeholder {
+    /* Internet Explorer 10-11 */
+    color: white;
+  }
+
+  ::-ms-input-placeholder {
+    /* Microsoft Edge */
+    color: white;
+  }
+
+  .black-button,
+  .black-button-mobile {
+    color: #fff !important;
+    border: 1px solid black;
+    text-align: center;
+    border-radius: 10px;
+    background-color: black;
+    transition: 0.2s;
+    cursor: pointer;
+    padding: 16px 16px 16px 16px;
+  }
+
+  .black-button {
+    /* 		padding: 3px 8px; */
+  }
+
+  @media only screen and (max-width: 699px) {
+    #td-track[data-v-21bdb846] {
+      width: 100%;
+      white-space: nowrap;
+    }
+  }
+
+  @media only screen and (min-width: 700px) {
+    #td-track[data-v-21bdb846] {
+      width: 1px;
+      white-space: nowrap;
+    }
+  }
+
+  .dot {
+    -webkit-text-size-adjust: 100%;
+    -webkit-tap-highlight-color: rgba(0, 0, 0, 0);
+    --blue: #007bff;
+    --indigo: #6610f2;
+    --purple: #6f42c1;
+    --pink: #e83e8c;
+    --red: #dc3545;
+    --orange: #fd7e14;
+    --yellow: #ffc107;
+    --green: #28a745;
+    --teal: #20c997;
+    --cyan: #17a2b8;
+    --white: #fff;
+    --gray: #6c757d;
+    --gray-dark: #343a40;
+    --primary: #007bff;
+    --secondary: #6c757d;
+    --success: #28a745;
+    --info: #17a2b8;
+    --warning: #ffc107;
+    --danger: #dc3545;
+    --light: #f8f9fa;
+    --dark: #343a40;
+    --breakpoint-xs: 0;
+    --breakpoint-sm: 576px;
+    --breakpoint-md: 768px;
+    --breakpoint-lg: 992px;
+    --breakpoint-xl: 1200px;
+    --font-family-sans-serif:
+      -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue",
+      Arial, "Noto Sans", sans-serif, "Apple Color Emoji", "Segoe UI Emoji",
+      "Segoe UI Symbol", "Noto Color Emoji";
+    --font-family-monospace:
+      SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New",
+      monospace;
+    font-size: 1rem;
+    font-weight: 400;
+    line-height: 1.5;
+    color: #212529;
+    text-align: left;
+    font-family: "Poppins";
+    box-sizing: border-box;
+    width: 20px;
+    height: 20px;
+    border-radius: 100px;
+    position: relative;
+    left: 50%;
+    transform: translateX(-50%);
+    background-color: #ff9d00;
+  }
+
+  .tracking-list {
+    -webkit-text-size-adjust: 100%;
+    -webkit-tap-highlight-color: rgba(0, 0, 0, 0);
+    --blue: #007bff;
+    --indigo: #6610f2;
+    --purple: #6f42c1;
+    --pink: #e83e8c;
+    --red: #dc3545;
+    --orange: #fd7e14;
+    --yellow: #ffc107;
+    --green: #28a745;
+    --teal: #20c997;
+    --cyan: #17a2b8;
+    --white: #fff;
+    --gray: #6c757d;
+    --gray-dark: #343a40;
+    --primary: #007bff;
+    --secondary: #6c757d;
+    --success: #28a745;
+    --info: #17a2b8;
+    --warning: #ffc107;
+    --danger: #dc3545;
+    --light: #f8f9fa;
+    --dark: #343a40;
+    --breakpoint-xs: 0;
+    --breakpoint-sm: 576px;
+    --breakpoint-md: 768px;
+    --breakpoint-lg: 992px;
+    --breakpoint-xl: 1200px;
+    --font-family-sans-serif:
+      -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue",
+      Arial, "Noto Sans", sans-serif, "Apple Color Emoji", "Segoe UI Emoji",
+      "Segoe UI Symbol", "Noto Color Emoji";
+    --font-family-monospace:
+      SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New",
+      monospace;
+    font-size: 1rem;
+    font-weight: 400;
+    line-height: 1.5;
+    color: #212529;
+    text-align: left;
+    font-family: "Poppins";
+    width: 100%;
+    box-sizing: border-box;
+    margin-bottom: 100px;
+    /*         border-bottom: #c3c3c3 1px solid; */
+  }
+
+  .dot-td {
+    -webkit-text-size-adjust: 100%;
+    -webkit-tap-highlight-color: rgba(0, 0, 0, 0);
+    --blue: #007bff;
+    --indigo: #6610f2;
+    --purple: #6f42c1;
+    --pink: #e83e8c;
+    --red: #dc3545;
+    --orange: #fd7e14;
+    --yellow: #ffc107;
+    --green: #28a745;
+    --teal: #20c997;
+    --cyan: #17a2b8;
+    --white: #fff;
+    --gray: #6c757d;
+    --gray-dark: #343a40;
+    --primary: #007bff;
+    --secondary: #6c757d;
+    --success: #28a745;
+    --info: #17a2b8;
+    --warning: #ffc107;
+    --danger: #dc3545;
+    --light: #f8f9fa;
+    --dark: #343a40;
+    --breakpoint-xs: 0;
+    --breakpoint-sm: 576px;
+    --breakpoint-md: 768px;
+    --breakpoint-lg: 992px;
+    --breakpoint-xl: 1200px;
+    --font-family-sans-serif:
+      -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue",
+      Arial, "Noto Sans", sans-serif, "Apple Color Emoji", "Segoe UI Emoji",
+      "Segoe UI Symbol", "Noto Color Emoji";
+    --font-family-monospace:
+      SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New",
+      monospace;
+    font-size: 1rem;
+    font-weight: 400;
+    line-height: 1.5;
+    color: #212529;
+    text-align: left;
+    font-family: "Poppins";
+    box-sizing: border-box;
+    width: 1%;
+  }
+
+  @media only screen and (max-width: 599px) {
+    .category-title {
+      margin-top: -30px;
+      padding-top: 15px;
+      padding-bottom: 15px;
+    }
+
+    .parcel-overall-title[data-v-21bdb846] {
+      display: none;
+    }
+
+    .parcel-detail-info[data-v-21bdb846] {
+      font-size: 13px;
+      font-weight: 500;
+    }
+
+    .parcel-details-title[data-v-21bdb846] {
+      -webkit-text-size-adjust: 100%;
+      -webkit-tap-highlight-color: rgba(0, 0, 0, 0);
+      --blue: #007bff;
+      --indigo: #6610f2;
+      --purple: #6f42c1;
+      --pink: #e83e8c;
+      --red: #dc3545;
+      --orange: #fd7e14;
+      --yellow: #ffc107;
+      --green: #28a745;
+      --teal: #20c997;
+      --cyan: #17a2b8;
+      --white: #fff;
+      --gray: #6c757d;
+      --gray-dark: #343a40;
+      --primary: #007bff;
+      --secondary: #6c757d;
+      --success: #28a745;
+      --info: #17a2b8;
+      --warning: #ffc107;
+      --danger: #dc3545;
+      --light: #f8f9fa;
+      --dark: #343a40;
+      --breakpoint-xs: 0;
+      --breakpoint-sm: 576px;
+      --breakpoint-md: 768px;
+      --breakpoint-lg: 992px;
+      --breakpoint-xl: 1200px;
+      --font-family-sans-serif:
+        -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue",
+        Arial, "Noto Sans", sans-serif, "Apple Color Emoji", "Segoe UI Emoji",
+        "Segoe UI Symbol", "Noto Color Emoji";
+      --font-family-monospace:
+        SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono",
+        "Courier New", monospace;
+      color: #212529;
+      text-align: left;
+      font-size: 21px;
+      font-family: "Poppins", sans-serif;
+      line-height: 29px;
+      box-sizing: border-box;
+      padding-top: 10px;
+      font-weight: 500;
+      padding-bottom: 10px;
+    }
+  }
+
+  @media only screen and (min-width: 600px) {
+    .svg-group {
+      padding-top: 40px;
+    }
+
+    .category-title {
+      padding-bottom: 40px;
+    }
+
+    .parcel-overall-title {
+      -webkit-text-size-adjust: 100%;
+      -webkit-tap-highlight-color: rgba(0, 0, 0, 0);
+      --blue: #007bff;
+      --indigo: #6610f2;
+      --purple: #6f42c1;
+      --pink: #e83e8c;
+      --red: #dc3545;
+      --orange: #fd7e14;
+      --yellow: #ffc107;
+      --green: #28a745;
+      --teal: #20c997;
+      --cyan: #17a2b8;
+      --white: #fff;
+      --gray: #6c757d;
+      --gray-dark: #343a40;
+      --primary: #007bff;
+      --secondary: #6c757d;
+      --success: #28a745;
+      --info: #17a2b8;
+      --warning: #ffc107;
+      --danger: #dc3545;
+      --light: #f8f9fa;
+      --dark: #343a40;
+      --breakpoint-xs: 0;
+      --breakpoint-sm: 576px;
+      --breakpoint-md: 768px;
+      --breakpoint-lg: 992px;
+      --breakpoint-xl: 1200px;
+      --font-family-sans-serif:
+        -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue",
+        Arial, "Noto Sans", sans-serif, "Apple Color Emoji", "Segoe UI Emoji",
+        "Segoe UI Symbol", "Noto Color Emoji";
+      --font-family-monospace:
+        SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono",
+        "Courier New", monospace;
+      color: #999999;
+      text-align: left;
+      font-size: 21px;
+      font-family: "Poppins", sans-serif;
+      font-weight: 500;
+      line-height: 21px;
+      box-sizing: border-box;
+      padding-top: 20px;
+      padding-left: 60px;
+    }
+
+    .parcel-details-title {
+      -webkit-text-size-adjust: 100%;
+      -webkit-tap-highlight-color: rgba(0, 0, 0, 0);
+      --blue: #007bff;
+      --indigo: #6610f2;
+      --purple: #6f42c1;
+      --pink: #e83e8c;
+      --red: #dc3545;
+      --orange: #fd7e14;
+      --yellow: #ffc107;
+      --green: #28a745;
+      --teal: #20c997;
+      --cyan: #17a2b8;
+      --white: #fff;
+      --gray: #6c757d;
+      --gray-dark: #343a40;
+      --primary: #007bff;
+      --secondary: #6c757d;
+      --success: #28a745;
+      --info: #17a2b8;
+      --warning: #ffc107;
+      --danger: #dc3545;
+      --light: #f8f9fa;
+      --dark: #343a40;
+      --breakpoint-xs: 0;
+      --breakpoint-sm: 576px;
+      --breakpoint-md: 768px;
+      --breakpoint-lg: 992px;
+      --breakpoint-xl: 1200px;
+      --font-family-sans-serif:
+        -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue",
+        Arial, "Noto Sans", sans-serif, "Apple Color Emoji", "Segoe UI Emoji",
+        "Segoe UI Symbol", "Noto Color Emoji";
+      --font-family-monospace:
+        SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono",
+        "Courier New", monospace;
+      color: #212529;
+      text-align: left;
+      font-size: 21px;
+      font-family: "Poppins", sans-serif;
+      line-height: 29px;
+      box-sizing: border-box;
+      padding-top: 10px;
+      font-weight: 500;
+      padding-bottom: 10px;
+    }
+  }
+
+  #tracking-number[data-v-21bdb846] {
+    -webkit-text-size-adjust: 100%;
+    -webkit-tap-highlight-color: rgba(0, 0, 0, 0);
+    --blue: #007bff;
+    --indigo: #6610f2;
+    --purple: #6f42c1;
+    --pink: #e83e8c;
+    --red: #dc3545;
+    --orange: #fd7e14;
+    --yellow: #ffc107;
+    --green: #28a745;
+    --teal: #20c997;
+    --cyan: #17a2b8;
+    --white: #fff;
+    --gray: #6c757d;
+    --gray-dark: #343a40;
+    --primary: #007bff;
+    --secondary: #6c757d;
+    --success: #28a745;
+    --info: #17a2b8;
+    --warning: #ffc107;
+    --danger: #dc3545;
+    --light: #f8f9fa;
+    --dark: #343a40;
+    --breakpoint-xs: 0;
+    --breakpoint-sm: 576px;
+    --breakpoint-md: 768px;
+    --breakpoint-lg: 992px;
+    --breakpoint-xl: 1200px;
+    --font-family-sans-serif:
+      -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue",
+      Arial, "Noto Sans", sans-serif, "Apple Color Emoji", "Segoe UI Emoji",
+      "Segoe UI Symbol", "Noto Color Emoji";
+    --font-family-monospace:
+      SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New",
+      monospace;
+    font-size: 1rem;
+    font-weight: 400;
+    line-height: 1.5;
+    color: #212529;
+    text-align: left;
+    box-sizing: border-box;
+    font-family: "Poppins", sans-serif;
+  }
+
+  #separate-line[data-v-21bdb846] {
+    -webkit-text-size-adjust: 100%;
+    -webkit-tap-highlight-color: rgba(0, 0, 0, 0);
+    --blue: #007bff;
+    --indigo: #6610f2;
+    --purple: #6f42c1;
+    --pink: #e83e8c;
+    --red: #dc3545;
+    --orange: #fd7e14;
+    --yellow: #ffc107;
+    --green: #28a745;
+    --teal: #20c997;
+    --cyan: #17a2b8;
+    --white: #fff;
+    --gray: #6c757d;
+    --gray-dark: #343a40;
+    --primary: #007bff;
+    --secondary: #6c757d;
+    --success: #28a745;
+    --info: #17a2b8;
+    --warning: #ffc107;
+    --danger: #dc3545;
+    --light: #f8f9fa;
+    --dark: #343a40;
+    --breakpoint-xs: 0;
+    --breakpoint-sm: 576px;
+    --breakpoint-md: 768px;
+    --breakpoint-lg: 992px;
+    --breakpoint-xl: 1200px;
+    --font-family-sans-serif:
+      -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue",
+      Arial, "Noto Sans", sans-serif, "Apple Color Emoji", "Segoe UI Emoji",
+      "Segoe UI Symbol", "Noto Color Emoji";
+    --font-family-monospace:
+      SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New",
+      monospace;
+    font-size: 1rem;
+    font-weight: 400;
+    line-height: 1.5;
+    color: #8b8989;
+    text-align: left;
+    font-family: "Poppins", sans-serif;
+    box-sizing: border-box;
+    border-bottom: 2px solid #d2d2d2;
+    width: 40%;
+    margin-top: 5px;
+    /*margin-bottom: 40px;*/
+  }
+
+  @media only screen and (min-width: 700px) {
+    .status-style[data-v-21bdb846] {
+      margin-right: 5%;
+      min-width: 45px;
+    }
+
+    .arrow[data-v-21bdb846] {
+      min-width: 16px;
+      margin-left: 25px;
+    }
+  }
+
+  @media only screen and (max-width: 699px) {
+    .status-style[data-v-21bdb846] {
+      display: none;
+    }
+
+    .arrow[data-v-21bdb846] {
+      margin-right: 5px;
+      max-width: 14px;
+      display: none;
+    }
+  }
+</style>

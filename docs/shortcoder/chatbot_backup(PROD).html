@@ -1,0 +1,854 @@
+<div class="greet-title">
+  <div class="greet-title-left">
+    <svg
+      width="32"
+      height="32"
+      viewBox="0 0 32 32"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+    >
+      <rect width="32" height="32" rx="4" fill="#FF9E46" />
+      <path
+        fill-rule="evenodd"
+        clip-rule="evenodd"
+        d="M6 16.015C6 10.7471 10.21 6 16.02 6C21.7 6 26 10.657 26 15.985C26 22.1642 20.96 26 16 26C14.36 26 12.54 25.5593 11.08 24.698C10.57 24.3876 10.14 24.1572 9.59 24.3375L7.57 24.9384C7.06 25.0986 6.6 24.698 6.75 24.1572L7.42 21.9139C7.53 21.6034 7.51 21.2729 7.35 21.0125C6.49 19.4301 6 17.6975 6 16.015ZM14.7 16.015C14.7 16.7261 15.27 17.2969 15.98 17.307C16.69 17.307 17.26 16.7261 17.26 16.025C17.26 15.314 16.69 14.7431 15.98 14.7431C15.28 14.7331 14.7 15.314 14.7 16.015ZM19.31 16.025C19.31 16.7261 19.88 17.307 20.59 17.307C21.3 17.307 21.87 16.7261 21.87 16.025C21.87 15.314 21.3 14.7431 20.59 14.7431C19.88 14.7431 19.31 15.314 19.31 16.025ZM11.37 17.307C10.67 17.307 10.09 16.7261 10.09 16.025C10.09 15.314 10.66 14.7431 11.37 14.7431C12.08 14.7431 12.65 15.314 12.65 16.025C12.65 16.7261 12.08 17.2969 11.37 17.307Z"
+        fill="white"
+      />
+    </svg>
+    <div class="greet-title-content" id="greet-title-content-id">
+      Customer Support
+    </div>
+  </div>
+  <div class="greet-title-right" onclick="close()" id="close-button">
+    &#8212;
+  </div>
+</div>
+<!-- <div id="greet-content">
+	<div class="greet-subtile">Enter your info and start a chat with our ChatBot.</div>
+	<div class="content">
+		<div class="name-group">
+			<div class="group-detail">
+				<div class="detail">
+					<div class='detail-content'>First Name</div><div class="star">*</div>
+				</div>
+				<input id="first-name" class="input-left" />
+			</div>
+			<div class="group-detail">
+				<div class="detail">
+					<div class='detail-content'>Last Name</div><div class="star">*</div>
+				</div>
+				<input id="last-name" class="input-right" />
+			</div>
+		</div>
+		<div class="group-detail">
+			<div class="detail">
+				<div class='detail-content'>Email</div><div class="star">*</div>
+			</div>
+			<input id="email" class="input-right" />
+		</div>
+	</div>
+	<div class="content"><button class="start-button" onclick="startChat();">Start a chat</button></div>
+</div> -->
+<div id="chat-content">
+  <div class="chat-group" id="chat-list"></div>
+  <div class="chat-input-group">
+    <div class="chat-input-group-inner" id="chat-input-group-inner-display">
+      <input class="chat-input" id="chat-send-input" />
+      <button
+        class="chat-button"
+        id="chat-send-button"
+        onclick="handleSend(true)"
+      >
+        Send
+      </button>
+    </div>
+    <div
+      class="chat-input-group-inner"
+      id="chat-input-group-inner-disabled"
+      style="flex-direction: column"
+    >
+      <div>
+        <div
+          style="
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 12px;
+          "
+        >
+          <div>
+            <div style="font-weight: 500">Street Number</div>
+            <input class="chat-input-disabled" id="chat-input-street-number" />
+          </div>
+          <div>
+            <div style="font-weight: 500">Street Name</div>
+            <input class="chat-input-disabled" id="chat-input-street-name" />
+          </div>
+        </div>
+        <div
+          style="
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 12px;
+          "
+        >
+          <div>
+            <div style="font-weight: 500">City</div>
+            <input class="chat-input-disabled" id="chat-input-city" />
+          </div>
+          <div>
+            <div style="font-weight: 500">State/Province</div>
+            <input class="chat-input-disabled" id="chat-input-state" />
+          </div>
+        </div>
+        <div
+          style="
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 12px;
+          "
+        >
+          <div>
+            <div style="font-weight: 500">Zip/Postal Code</div>
+            <input class="chat-input-disabled" id="chat-input-zip" />
+          </div>
+          <div>
+            <div style="font-weight: 500">Country</div>
+            <input class="chat-input-disabled" id="chat-input-country" />
+          </div>
+        </div>
+        <div
+          style="
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 12px;
+          "
+        >
+          <div>
+            <div style="font-weight: 500">Unit Number</div>
+            <input class="chat-input-disabled" id="chat-input-unit-number" />
+          </div>
+          <div>
+            <div style="font-weight: 500">Buzzer Code</div>
+            <input class="chat-input-disabled" id="chat-input-buzzer" />
+          </div>
+        </div>
+      </div>
+      <div style="display: flex; justify-content: end">
+        <button
+          class="chat-button"
+          style="background-color: #f0f0f0; color: black"
+          id="chat-send-button-cancel"
+          onclick="enableInput()"
+        >
+          Cancel
+        </button>
+        <button
+          class="chat-button"
+          id="chat-send-button-disabled"
+          onclick="handleSend(true, 'addr')"
+        >
+          Send
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/gh/pieroxy/lz-string/libs/lz-string.js"></script>
+
+<script type="text/javascript">
+  // 	jQuery("#first-name").html("");
+  // 	jQuery("#last-name").html("");
+  // 	jQuery("#email").html("");
+  //
+
+  document.getElementById("close-button").addEventListener("click", close);
+  // 	document.getElementById("chat-send-button").addEventListener("click", handleSend);
+
+  const botAvatar =
+    '<svg width="32" height="32" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="20" cy="20" r="20" fill="#101820"/><path fill-rule="evenodd" clip-rule="evenodd" d="M20.5566 18.7622L23.9496 16.5527V21.0445L20.5566 23.254V18.7622Z" fill="#F79045"/><path fill-rule="evenodd" clip-rule="evenodd" d="M16.8906 16.0816L20.3144 13.8357L23.7382 16.0816L20.3032 18.3191L16.8906 16.0816Z" fill="#F79045"/><path fill-rule="evenodd" clip-rule="evenodd" d="M16.6797 21.0444V16.5554L20.0446 18.7621V23.2539L16.6797 21.0444Z" fill="#F79045"/><path fill-rule="evenodd" clip-rule="evenodd" d="M20.3021 29.9972C18.988 29.9972 17.716 29.7336 16.5253 29.2149C15.4746 28.7551 14.522 28.1158 13.6927 27.3083C12.6952 26.3353 11.9135 25.1353 11.4288 23.8399C11.031 22.7828 10.832 21.6669 10.832 20.5201V12.7197L16.1666 16.219V21.1818C16.1666 21.2687 16.2087 21.3472 16.2815 21.3949L20.1592 23.938C20.1844 23.952 20.2012 23.9632 20.2208 23.9689L20.246 23.9745C20.2712 23.9801 20.2824 23.9829 20.2937 23.9829C20.3273 23.9829 20.3525 23.9773 20.3749 23.9717C20.3973 23.9661 20.4113 23.9576 20.4281 23.9492L24.3422 21.4005C24.4151 21.3528 24.4571 21.2715 24.4571 21.1846V16.219L29.7665 12.7394V20.5201C29.7665 21.6557 29.5676 22.7688 29.1753 23.8287C28.6878 25.1353 27.9033 26.3381 26.9059 27.3083C26.0877 28.1074 25.1435 28.7438 24.0985 29.2037C22.8937 29.7308 21.6161 30 20.2965 30" fill="#F8F8F8"/><path fill-rule="evenodd" clip-rule="evenodd" d="M11.043 12.2459L14.4667 10L19.8462 13.5301L16.4252 15.776L11.043 12.2459Z" fill="#F8F8F8"/><path fill-rule="evenodd" clip-rule="evenodd" d="M20.7812 13.5301L26.1355 10.0225L29.5592 12.2656L24.205 15.776L20.7812 13.5301Z" fill="#F8F8F8"/></svg>';
+  const customerAvatar =
+    '<svg width="32" height="32" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="20" cy="20" r="20" fill="#D9D9D9"/><path d="M20.544 14.928V26H19.088V17.744L15.408 26H14.384L10.688 17.728V26H9.232V14.928H10.8L14.896 24.08L18.992 14.928H20.544ZM31.0133 21.28C31.0133 21.5573 30.9973 21.8507 30.9653 22.16H23.9573C24.0106 23.024 24.3039 23.7013 24.8373 24.192C25.3813 24.672 26.0373 24.912 26.8053 24.912C27.4346 24.912 27.9573 24.768 28.3733 24.48C28.7999 24.1813 29.0986 23.7867 29.2693 23.296H30.8373C30.6026 24.1387 30.1333 24.8267 29.4293 25.36C28.7253 25.8827 27.8506 26.144 26.8053 26.144C25.9733 26.144 25.2266 25.9573 24.5653 25.584C23.9146 25.2107 23.4026 24.6827 23.0293 24C22.6559 23.3067 22.4693 22.5067 22.4693 21.6C22.4693 20.6933 22.6506 19.8987 23.0133 19.216C23.3759 18.5333 23.8826 18.0107 24.5333 17.648C25.1946 17.2747 25.9519 17.088 26.8053 17.088C27.6373 17.088 28.3733 17.2693 29.0133 17.632C29.6533 17.9947 30.1439 18.496 30.4853 19.136C30.8373 19.7653 31.0133 20.48 31.0133 21.28ZM29.5093 20.976C29.5093 20.4213 29.3866 19.9467 29.1413 19.552C28.8959 19.1467 28.5599 18.8427 28.1333 18.64C27.7173 18.4267 27.2533 18.32 26.7413 18.32C26.0053 18.32 25.3759 18.5547 24.8533 19.024C24.3413 19.4933 24.0479 20.144 23.9733 20.976H29.5093Z" fill="#101820"/></svg>';
+  const loadingDot =
+    '<svg width="8" height="8" viewBox="0 0 8 8" fill="none" xmlns="http://www.w3.org/2000/svg"><circle id="Ellipse 955" cx="4" cy="4" r="4" fill="#999999"/></svg>';
+  // 	const endDivider = '<div><hr class="hr-text gradient" data-content="Above are the history chat."></div>';
+  const endDivider = '<div><hr class="line"></div>';
+
+  var chatRecord = "";
+  var name = "";
+  var homeType = "";
+
+  const validDuration = 3 * 60 * 1000; // 3 minutes
+  var timeout;
+
+  let labelLength = 0;
+
+  var inputBox = document.getElementById("chat-send-input");
+  if (inputBox) {
+    inputBox.addEventListener("click", function () {
+      jQuery("#chat-list").animate(
+        {
+          scrollTop: jQuery("#chat-list").prop("scrollHeight"),
+        },
+        500,
+      );
+    });
+    inputBox.addEventListener("focus", function () {
+      jQuery("#chat-list").animate(
+        {
+          scrollTop: jQuery("#chat-list").prop("scrollHeight"),
+        },
+        500,
+      );
+    });
+  }
+
+  var customerInput = document.getElementById("chat-send-input");
+  customerInput.addEventListener("keypress", function (event) {
+    if (event.key === "Enter") {
+      event.preventDefault();
+      handleSend(true);
+    }
+  });
+
+  // 	jQuery(function () {
+  //         startChat();
+  //     });
+
+  jQuery(function () {
+    //         const enableInput = sessionStorage.getItem('enable-input');
+    // 		if(enableInput) {
+    // 			jQuery('#chat-input-group-inner-display').css("display", "flex");
+    // 			jQuery('#chat-input-group-inner-disabled').css("display", "none");
+    // 		} else {
+    // 			jQuery('#chat-input-group-inner-display').css("display", "none");
+    // 			jQuery('#chat-input-group-inner-disabled').css("display", "flex");
+    // 		}
+  });
+
+  function scrollToEnd() {
+    jQuery("#chat-list").animate(
+      {
+        scrollTop: jQuery("#chat-list").prop("scrollHeight"),
+      },
+      500,
+    );
+  }
+
+  function handleSend(isIntent, intent) {
+    clearTimeout(timeout);
+    let inputText = document.getElementById("chat-send-input").value;
+    if (!isIntent) {
+      inputText = intent;
+    }
+    if (intent === "addr") {
+      const obj = {
+        new_address: {
+          street_number: document.getElementById("chat-input-street-number")
+            .value,
+          street_name: document.getElementById("chat-input-street-name").value,
+          city: document.getElementById("chat-input-city").value,
+          state_or_province: document.getElementById("chat-input-state").value,
+          zip_code: document.getElementById("chat-input-zip").value,
+          country: document.getElementById("chat-input-country").value,
+          unit_number: document.getElementById("chat-input-unit-number").value,
+          buzzer_code: document.getElementById("chat-input-buzzer").value,
+          house_type: homeType,
+        },
+      };
+      inputText = JSON.stringify(obj);
+      console.log(inputText);
+    }
+    let sessionId = sessionStorage.getItem("session");
+    if (inputText) {
+      let customerTemplate =
+        "<div class='customer-group' id={index}><div class=customer-avatar>{avatar}</div><div class='customer-text'>{text}</div></div>";
+      customerTemplate = customerTemplate
+        .replace("{text}", inputText)
+        .replace("{avatar}", customerAvatar);
+      chatRecord += customerTemplate;
+      jQuery("#chat-list").html(chatRecord);
+      jQuery("#chat-send-input").val("");
+      scrollToEnd();
+      const data = {
+        user_input: inputText,
+        intent_check: isIntent,
+        // 				French
+        // 				'lang': window.location.href.includes('fr') ? 'fr' : 'en',
+        lang: "en",
+        confirmed_address: intent === "addr",
+      };
+
+      if (sessionId && sessionId !== "null") {
+        data["session_key"] = sessionId;
+      }
+
+      var botLoading =
+        "<div class='bot-group'><div class=bot-avatar>{avatar}</div><div class='bot-loading-text'><span class='loading-dot'>{loadingDot}</span><span class='loading-dot'>{loadingDot}</span><span>{loadingDot}</span></div></div>";
+      botLoading = botLoading
+        .replace("{avatar}", botAvatar)
+        .replace("{loadingDot}", loadingDot)
+        .replace("{loadingDot}", loadingDot)
+        .replace("{loadingDot}", loadingDot);
+      var chatRecordCurr = chatRecord;
+      chatRecordCurr += botLoading;
+      jQuery("#chat-list").html(chatRecordCurr);
+      scrollToEnd();
+
+      jQuery.ajax({
+        type: "POST",
+        dataType: "json",
+        headers: {
+          "CHATBOT-API-KEY": "uni_lab_pjt02_00001",
+          "CONTENT-TYPE": "application/json",
+        },
+        data: JSON.stringify(data),
+        url: "https://chatbot-api.uniuni.ca/unilab/api/chatbot",
+        success: function (response) {
+          if (response.response) {
+            var botTemplate =
+              "<div class='bot-group'><div class=bot-avatar>{avatar}</div><div class='bot-text'>{text}</div></div>";
+            botTemplate = botTemplate
+              .replace("{avatar}", botAvatar)
+              .replace("{text}", response.response);
+            chatRecord += botTemplate;
+            jQuery("#chat-list").html(chatRecord);
+            scrollToEnd();
+            sessionStorage.setItem("session", response.session_key);
+            if (response.end) {
+              clearHistory(true, "api");
+            }
+            timeout = setTimeout(() => {
+              sessionStorage.setItem("session", "");
+              clearHistory(true, "timeout");
+            }, validDuration);
+            if (response?.context?.request_address) {
+              handleUpdateAddress();
+            }
+          } else {
+            if (response.end) {
+              sessionStorage.setItem("session", "");
+              clearHistory(true, "api", true);
+            }
+            jQuery("#chat-list").html(chatRecord);
+            scrollToEnd();
+          }
+          jQuery("#chat-send-input").attr("autofocus", true);
+
+          const compressedChatRecord = LZString.compress(chatRecord);
+          sessionStorage.setItem("record", compressedChatRecord);
+
+          enableInput();
+        },
+        error: function (err) {
+          jQuery("#chat-list").html(chatRecord);
+          scrollToEnd();
+          const compressedChatRecord = LZString.compress(string);
+          sessionStorage.setItem("record", compressedChatRecord);
+
+          enableInput();
+        },
+      });
+    }
+  }
+
+  async function startChat(showHistory, isOutputEmpty) {
+    try {
+      // 			French
+      // 			if(window.location.href.includes('fr')) {
+      // 				jQuery('#greet-title-content-id').html('Service Client')
+      // 			}
+
+      await jQuery("#chat-content").show();
+
+      let recordCompressed = await sessionStorage.getItem("record");
+      let record = await LZString.decompress(recordCompressed);
+      if (record && !showHistory) {
+        // Open new tag or refresh while session not ends
+        chatRecord = await record;
+        sessionId = (await sessionStorage.getItem("session")) || "";
+      } else {
+        // Session end and new session starts
+        await sessionStorage.setItem("session", "");
+        if (record) {
+          chatRecord = await record;
+        } else {
+          // Initial session
+          let link =
+            "https://chatbot-api.uniuni.ca/unilab/api/index?n_day=1&lang=en";
+          let salutText =
+            "Hi! I\'m UniUni\'s virtual assistant. What can I help you with today?";
+          // 					French
+          // 					if(window.location.href.includes('fr')) {
+          // 						link = 'https://chatbot-api.qa.uniuni.ca/unilab/api/index?lang=fr&top_n=5&n_day=1';
+          // 						salutText = "Salutations! Je suis l\'Assistant Virtuel du Support UniUni. Avez-vous besoin d\'aide avec les services de livraison UniUni ? Je suis votre service et vous aider!";
+          // 					}
+          var botTemplate =
+            "<div class='bot-group'><div class=bot-avatar>{avatar}</div><div class='bot-text'>{text}{label_list}</div></div>";
+          botTemplate = await botTemplate
+            .replace("{avatar}", botAvatar)
+            .replace("{text}", salutText);
+          await jQuery.ajax({
+            type: "GET",
+            dataType: "json",
+            headers: {
+              "CHATBOT-API-KEY": "uni_lab_pjt02_00001",
+              "CONTENT-TYPE": "application/json",
+            },
+            url: link,
+            success: function (response) {
+              let groupTemplate = '<div class="label-group-class">{list}</div>';
+              let groupTemplateInner = "";
+              labelLength = response?.label_list.length || 0;
+              if (labelLength > 0) {
+                let othersTemplate =
+                  '<button class="label-class" value="Others" onclick="handleIntent({index});" id="label-{index}">Others</button>';
+                for (let i = 0; i < response.label_list.length; i++) {
+                  let template =
+                    '<button class="label-class" value="{value}" onclick="handleIntent({index});" id="label-{index}">{label}</button>';
+                  template = template
+                    .replace("{label}", response.label_list[i])
+                    .replace("{index}", i)
+                    .replace("{index}", i)
+                    .replace("{value}", response.label_list[i]);
+                  groupTemplateInner += template;
+                }
+                othersTemplate = othersTemplate
+                  .replace("{index}", labelLength)
+                  .replace("{index}", labelLength);
+                groupTemplateInner += othersTemplate;
+              }
+              groupTemplate = groupTemplate.replace(
+                "{list}",
+                groupTemplateInner,
+              );
+              botTemplate = botTemplate.replace("{label_list}", groupTemplate);
+              chatRecord = botTemplate;
+            },
+            error: function (err) {
+              botTemplate = botTemplate.replace("{label_list}", "");
+              chatRecord = botTemplate;
+            },
+          });
+        }
+      }
+      recordCompressed = await LZString.compress(chatRecord);
+      await sessionStorage.setItem("record", recordCompressed);
+      await jQuery("#chat-list").html(chatRecord);
+      await scrollToEnd();
+    } catch {
+    } finally {
+    }
+  }
+
+  function close() {
+    var esc = jQuery.Event("keyup");
+    esc.keyCode = 27;
+    jQuery("#close-button").trigger(esc);
+  }
+
+  function clearHistory(showHistory, type, isOutputEmpty) {
+    var endTemplate =
+      "<div class='bot-group'><div class=bot-avatar>{avatar}</div><div class='bot-text'>{text}</div></div>";
+    if (type === "api" && isOutputEmpty) {
+      endTemplate = endTemplate
+        .replace("{avatar}", botAvatar)
+        .replace(
+          "{text}",
+          "If you have other questions, please rephrase your question to 'Where is my parcel?' or 'When can I expect to receive my parcel?'",
+        );
+    } else if (type === "api") {
+      endTemplate = endTemplate
+        .replace("{avatar}", botAvatar)
+        .replace(
+          "{text}",
+          "Thank you for using Uni-Chatbot! Your feedback is valuable in helping us enhance our services. Have a great day.",
+        );
+      endTemplate += endDivider;
+    } else {
+      endTemplate = endTemplate
+        .replace("{avatar}", botAvatar)
+        .replace(
+          "{text}",
+          "It appears there hasn't been a response for some time. For additional assistance, please feel free to initiate a new chat. Thank you for reaching out.",
+        );
+      endTemplate += endDivider;
+    }
+
+    chatRecord += endTemplate;
+    const recordCompressed = LZString.compress(chatRecord);
+    sessionStorage.setItem("record", recordCompressed);
+    jQuery("#chat-list").html(chatRecord);
+
+    setTimeout(() => {
+      scrollToEnd();
+    }, 500);
+    setTimeout(() => {
+      startChat(showHistory, isOutputEmpty);
+    }, 3500);
+  }
+
+  function handleLabelSelected(i) {
+    for (let j = 0; j <= labelLength; j++) {
+      if (j === i) {
+        jQuery("#label-" + j).css("border", "1.5px solid #FF9E46");
+        jQuery("#label-" + j).css("background", "#FF9E46");
+        jQuery("#label-" + j).css("color", "white");
+      } else {
+        jQuery("#label-" + j).css("border", "1.5px solid #E9E9E9");
+        jQuery("#label-" + j).css("background", "#FFF");
+        jQuery("#label-" + j).css("color", "black");
+      }
+      recordLatestCompress = LZString.compress(jQuery("#chat-list").html());
+      sessionStorage.setItem("record", recordLatestCompress);
+    }
+  }
+
+  function handleResidenceSelected(i) {
+    for (let j = 0; j < 2; j++) {
+      if (j === i) {
+        jQuery("#residence-" + j).css("border", "1.5px solid #FF9E46");
+        jQuery("#residence-" + j).css("background", "#FF9E46");
+        jQuery("#residence-" + j).css("color", "white");
+        console.log("selected");
+      } else {
+        jQuery("#residence-" + j).css("border", "1.5px solid #E9E9E9");
+        jQuery("#residence-" + j).css("background", "#FFF");
+        jQuery("#residence-" + j).css("color", "black");
+      }
+      homeType = i === 0 ? "House" : "Townhouse/Apartment";
+      jQuery("#residence-" + i).css("pointer-events", "none");
+      recordLatestCompress = LZString.compress(jQuery("#chat-list").html());
+      sessionStorage.setItem("record", recordLatestCompress);
+    }
+  }
+
+  function handleResidenceType(residenceType) {
+    let customerTemplate =
+      "<div class='customer-group' id={index}><div class=customer-avatar>{avatar}</div><div class='customer-text'>I live in a {text}.</div></div>";
+    handleResidenceSelected(residenceType);
+    if (residenceType === 0) {
+      customerTemplate = customerTemplate
+        .replace("{avatar}", customerAvatar)
+        .replace("{text}", "house");
+    } else {
+      customerTemplate = customerTemplate
+        .replace("{avatar}", customerAvatar)
+        .replace("{text}", "townhouse/apartment");
+    }
+    chatRecord += customerTemplate;
+    jQuery("#chat-list").html(chatRecord);
+    jQuery("#chat-send-input").val("");
+    scrollToEnd();
+    disableInput();
+    const compressedChatRecord = LZString.compress(chatRecord);
+    sessionStorage.setItem("record", compressedChatRecord);
+  }
+
+  function handleUpdateAddress() {
+    let textCustomer = "";
+    let textChatbot = "";
+    let customerTemplate =
+      "<div class='customer-group' id={index}><div class=customer-avatar>{avatar}</div><div class='customer-text'>{text}</div></div>";
+    customerTemplate = customerTemplate.replace("{avatar}", customerAvatar);
+    let botTemplate =
+      "<div class='bot-group'><div class=bot-avatar>{avatar}</div><div class='bot-text'>{text}<button class='label-class' id='residence-0' style='margin-bottom: 5px;' onclick='handleResidenceType(0);'>House</button><button class='label-class' id='residence-1' onclick='handleResidenceType(1);'>Townhouse/Apartment</button></div></div>";
+    botTemplate = botTemplate.replace("{avatar}", botAvatar);
+    textChatbot = "Please select the type of residence you are living:";
+    botTemplate = botTemplate.replace("{text}", textChatbot);
+    chatRecord += botTemplate;
+    jQuery("#chat-list").html(chatRecord);
+    jQuery("#chat-send-input").val("");
+    scrollToEnd();
+    const compressedChatRecord = LZString.compress(chatRecord);
+    sessionStorage.setItem("record", compressedChatRecord);
+  }
+
+  function handleIntent(i) {
+    handleLabelSelected(i);
+    const intent = document.getElementById("label-" + i).value;
+    if (intent === "Others") {
+      let botTemplate =
+        "<div class='bot-group'><div class=bot-avatar>{avatar}</div><div class='bot-text'>{text}</div></div>";
+      botTemplate = botTemplate
+        .replace("{avatar}", botAvatar)
+        .replace("{text}", "Please enter the keywords of your inquiry.");
+      chatRecord += botTemplate;
+      jQuery("#chat-list").html(chatRecord);
+      scrollToEnd();
+      const compressedChatRecord = LZString.compress(chatRecord);
+      sessionStorage.setItem("record", compressedChatRecord);
+    } else {
+      handleSend(false, intent);
+    }
+  }
+
+  function enableInput() {
+    jQuery("#chat-input-group-inner-display").css("display", "flex");
+    jQuery("#chat-input-group-inner-disabled").css("display", "none");
+    jQuery(".chat-input-group").css("background-color", "#F0F0F0");
+
+    sessionStorage.setItem("enable-input", true);
+  }
+
+  function disableInput() {
+    jQuery("#chat-input-group-inner-display").css("display", "none");
+    jQuery("#chat-input-group-inner-disabled")
+      .css("display", "flex")
+      .css("background-color", "#F0F0F0");
+    jQuery(".chat-input-group").css("background-color", "white");
+
+    sessionStorage.setItem("enable-input", false);
+  }
+</script>
+<style>
+  .label-group-class {
+    display: flex;
+    flex-direction: column;
+    flex-wrap: wrap;
+    gap: 4px;
+  }
+  .label-class {
+    font-size: 14px;
+    border-radius: 8px;
+    border: 1.5px solid #e9e9e9;
+    background: #fff;
+    padding: 4px 12px 4px 12px;
+    cursor: pointer;
+  }
+  .label-class:hover {
+    border: 1.5px solid #ff9e46;
+    background: #ff9e46;
+    color: white;
+  }
+
+  .line {
+    border-top: 1px dashed #515962;
+    margin: 30px 15px;
+    opacity: 0.5;
+  }
+
+  .hr-text {
+    border: 0;
+    line-height: 1em;
+    position: relative;
+    text-align: center;
+    height: 1.5em;
+    font-size: 12px;
+    margin: 30px 15px;
+    outline: 0;
+    color: black;
+    opacity: 0.5;
+  }
+  .hr-text::before {
+    content: "";
+    background: linear-gradient(to right, transparent, #818078, transparent);
+    position: absolute;
+    left: 0;
+    top: 50%;
+    width: 100%;
+    height: 1px;
+  }
+  .hr-text::after {
+    content: attr(data-content);
+    position: relative;
+    display: inline-block;
+    color: black;
+
+    padding: 0 0.5em;
+    line-height: 1.5em;
+    color: #818078;
+    background-color: #fcfcfa;
+  }
+
+  .bot-loading-text {
+    background-color: #f0f0f0;
+    text-align: center;
+    padding: 16px;
+    border-radius: 10px;
+  }
+  .loading-dot {
+    margin-right: 8px;
+  }
+
+  .customer-group {
+    width: 80%;
+    float: right;
+    margin-bottom: 10px;
+    display: flex;
+    flex-direction: row-reverse;
+  }
+  .customer-avatar {
+    float: right;
+  }
+  .customer-text {
+    padding: 12px;
+    background-color: #e9e9e9;
+    font-size: 14px;
+    word-break: break-word;
+    border-radius: 5px;
+    margin-right: 10px;
+  }
+  .bot-group {
+    display: flex;
+    width: 80%;
+    margin-bottom: 10px;
+  }
+  .bot-avatar {
+    margin-right: 10px;
+  }
+  .bot-text {
+    padding: 12px;
+    background-color: #fcecdc;
+    font-size: 14px;
+    text-wrap: wrap;
+    border-radius: 5px;
+  }
+
+  .chat-group {
+    padding-left: 24px;
+    padding-right: 24px;
+    padding-top: 10px;
+    padding-bottom: 10px;
+    background-color: #f5f5f5;
+    height: 45vh;
+    overflow-y: scroll;
+    overflow-x: hidden;
+  }
+  .chat-input-group-inner {
+    background-color: white;
+    justify-content: space-between;
+    width: 100%;
+    padding-top: 5px;
+    padding-bottom: 5px;
+    padding-left: 10px;
+    padding-right: 5px;
+    border-radius: 5px;
+  }
+
+  #chat-input-group-inner-display {
+    display: flex;
+  }
+  #chat-input-group-inner-disabled {
+    display: none;
+  }
+
+  .chat-input-disabled {
+    width: 95%;
+    border-radius: 4;
+    padding: 2;
+  }
+  .chat-input {
+    width: 100%;
+    border: none;
+    border-radius: 0 !important;
+    padding: 0;
+    margin-right: 5px;
+  }
+  .chat-button {
+    color: white;
+    background-color: black;
+    padding: 8px 16px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-weight: 600;
+  }
+  .chat-button-disabled {
+    padding: 8px 16px;
+    border-radius: 5px;
+    font-weight: 600;
+  }
+  .chat-input-group {
+    background-color: #f0f0f0;
+    padding-top: 16px;
+    padding-bottom: 16px;
+    padding-left: 24px;
+    padding-right: 24px;
+    width: 100%;
+    border-bottom-left-radius: 20px;
+    border-bottom-right-radius: 20px;
+  }
+
+  .start-button {
+    background-color: black;
+    width: 100%;
+    font-size: 16px;
+    color: white;
+    padding-top: 16px;
+    padding-bottom: 16px;
+    border-radius: 5px;
+    cursor: pointer;
+    margin-bottom: 24px;
+    margin-top: 15px;
+    font-weight: 600;
+  }
+
+  .input-right {
+    width: 100%;
+  }
+  .input-left {
+    width: 96%;
+  }
+  input {
+    color: black;
+    border-radius: 5px !important;
+    padding: 10px 10px;
+    box-sizing: border-box;
+    border: 1px solid #ccc;
+    background-color: white;
+  }
+  .group-detail {
+    width: 100%;
+  }
+  .star {
+    color: red;
+  }
+  .detail-content {
+    font-size: 16px;
+    font-weight: 600;
+  }
+  .detail {
+    display: flex;
+  }
+  .name-group {
+    display: flex;
+    justify-content: space-between;
+  }
+  .detail {
+    margin-top: 10px;
+  }
+  .content {
+    margin-left: 24px;
+    margin-right: 24px;
+  }
+
+  .greet-subtile {
+    font-size: 14px;
+    line-height: 20px;
+    color: #999999;
+    width: 90%;
+    margin-left: 24px;
+    margin-right: 24px;
+  }
+  .greet-title {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding-top: 16px !important;
+    padding-bottom: 16px !important;
+    padding-left: 24px !important;
+    padding-right: 24px !important;
+  }
+  .greet-title-left {
+    display: flex;
+    align-items: center;
+  }
+  .greet-title-right {
+    cursor: pointer;
+  }
+  .greet-title-content {
+    font-size: 16px;
+    font-weight: 600;
+    margin-left: 5px;
+  }
+</style>
