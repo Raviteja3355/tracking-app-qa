@@ -3,6 +3,7 @@ import { Poppins } from 'next/font/google'
 import { Providers } from '../providers'
 import Header from '@/components/layout/Header'
 import IntercomWidget from '@/components/layout/Intercom'
+import Analytics from '@/components/layout/Analytics'
 import '../globals.css'
 
 const poppins = Poppins({
@@ -85,6 +86,7 @@ export default function FrLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="fr-CA" className={poppins.variable}>
       <body className="min-h-screen bg-white font-poppins antialiased">
+        <Analytics />
         <Providers>
           <Header />
           {children}

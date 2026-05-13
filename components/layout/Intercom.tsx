@@ -1,6 +1,4 @@
-'use client'
-
-import { useEffect } from 'react'
+import Script from 'next/script'
 
 const APP_ID = process.env.NEXT_PUBLIC_INTERCOM_APP_ID
 
@@ -12,31 +10,17 @@ declare global {
 }
 
 export default function IntercomWidget() {
-  useEffect(() => {
-    if (!APP_ID) return
+  if (!APP_ID) return null
 
-    window.intercomSettings = { app_id: APP_ID }
-
-    const w = window
-    const ic = w.Intercom
-    if (typeof ic === 'function') {
-      ic('reattach_activator')
-      ic('update', w.intercomSettings)
-    } else {
-      const s = document.createElement('script')
-      s.type = 'text/javascript'
-      s.async = true
-      s.src = `https://widget.intercom.io/widget/${APP_ID}`
-      const x = document.getElementsByTagName('script')[0]
-      x.parentNode?.insertBefore(s, x)
-    }
-
-    window.Intercom?.('boot', { app_id: APP_ID })
-
-    return () => {
-      window.Intercom?.('shutdown')
-    }
-  }, [])
-
-  return null
+  return (
+    <Script
+      id="intercom"
+      src={`https://widget.intercom.io/widget/${APP_ID}`}
+      strategy="lazyOnload"
+      onLoad={() => {
+        window.intercomSettings = { app_id: APP_ID }
+        window.Intercom?.('boot', { app_id: APP_ID })
+      }}
+    />
+  )
 }
