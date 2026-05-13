@@ -1,7 +1,7 @@
 import type { Metadata, Viewport } from 'next'
 import { Poppins } from 'next/font/google'
 import { Providers } from '../providers'
-import Header from '@/components/layout/Header'
+import ClientOnlyHeader from '@/components/layout/ClientOnlyHeader'
 import IntercomWidget from '@/components/layout/Intercom'
 import Analytics from '@/components/layout/Analytics'
 import '../globals.css'
@@ -88,7 +88,7 @@ export default function FrLayout({ children }: { children: React.ReactNode }) {
       <body className="min-h-screen bg-white font-poppins antialiased">
         <Analytics />
         <Providers>
-          <Header />
+          <ClientOnlyHeader />
           {children}
           <IntercomWidget />
         </Providers>

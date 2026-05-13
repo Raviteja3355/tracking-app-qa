@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useEffect } from 'react'
 import { useTracking } from '@/lib/hooks/useTracking'
 import { usePod } from '@/lib/hooks/usePod'
 import { fetchPodImages } from '@/lib/api/pod'
@@ -47,6 +47,24 @@ export default function TrackingApp() {
     downloadAll,
     downloadPdf,
   } = usePod(validResults)
+
+  useEffect(() => {
+    // 支持首页 widget 传参格式：#tracking-detail?no=TNO1,TNO2（shortcoder 不 encode，raw 逗号）
+    // 也支持标准 query string：?no=TNO1,TNO2
+    const hashMatch = window.location.hash.match(/[?&]no=([^&]*)/)
+    const searchParam = new URLSearchParams(window.location.search).get('no')
+    const encoded = hashMatch ? hashMatch[1] : searchParam ?? null
+    if (!encoded) return
+
+    let raw = encoded
+    try { raw = decodeURIComponent(encoded) } catch { /* 保留原始值 */ }
+
+    if (raw.trim()) {
+      setInputValue(raw)
+      track(raw)
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   function handleTrack() {
     setShowInvalidAlert(false)
