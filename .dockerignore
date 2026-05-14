@@ -1,0 +1,5 @@
+node_modules
+.next
+out
+# .env.local is included so NEXT_PUBLIC_* vars are baked in at build time
+# DO NOT commit .env.local to git
