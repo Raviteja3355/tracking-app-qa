@@ -1,33 +1,26 @@
-import moment from 'moment'
-
 export interface FormattedTime {
   date: string
   time: string
 }
 
+function pad(n: number): string {
+  return String(n).padStart(2, '0')
+}
+
 export function formatTime(timestamp: number): FormattedTime {
   const d = new Date(timestamp * 1000)
   return {
-    date:
-      d.getUTCFullYear() +
-      '-' +
-      String(d.getUTCMonth() + 1).padStart(2, '0') +
-      '-' +
-      String(d.getUTCDate()).padStart(2, '0'),
-    time:
-      String(d.getUTCHours()).padStart(2, '0') +
-      ':' +
-      String(d.getUTCMinutes()).padStart(2, '0') +
-      ':' +
-      String(d.getUTCSeconds()).padStart(2, '0'),
+    date: `${d.getUTCFullYear()}-${pad(d.getUTCMonth() + 1)}-${pad(d.getUTCDate())}`,
+    time: `${pad(d.getUTCHours())}:${pad(d.getUTCMinutes())}:${pad(d.getUTCSeconds())}`,
   }
 }
 
+// CST = UTC-6; shift timestamp by -6h then read as UTC
 export function formatTimeCST(timestamp: number): FormattedTime {
-  const d = moment.utc(new Date((timestamp - 6 * 3600) * 1000))
+  const d = new Date((timestamp - 6 * 3600) * 1000)
   return {
-    time: d.format('HH:mm:ss'),
-    date: d.format('YYYY-MM-DD'),
+    time: `${pad(d.getUTCHours())}:${pad(d.getUTCMinutes())}:${pad(d.getUTCSeconds())}`,
+    date: `${d.getUTCFullYear()}-${pad(d.getUTCMonth() + 1)}-${pad(d.getUTCDate())}`,
   }
 }
 
@@ -38,8 +31,7 @@ export function formatTimeStrCST(strCST: string): FormattedTime {
 }
 
 export function isSevenDaysFromNow(timestamp: number): boolean {
-  const now = moment().unix()
-  const diff = Math.abs(timestamp - now) / (3600 * 24)
+  const diff = Math.abs(timestamp - Date.now() / 1000) / (3600 * 24)
   return diff <= 7
 }
 

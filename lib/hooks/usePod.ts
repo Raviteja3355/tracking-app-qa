@@ -6,7 +6,6 @@ import {
   resolveWatermarkData,
   getImageFileExtension,
 } from '../utils/watermark'
-import JSZip from 'jszip'
 
 const INITIAL_STATE: PodModalState = {
   open: false,
@@ -88,6 +87,7 @@ export function usePod(validResults: TrackingResult[]) {
 
   const downloadAll = useCallback(async () => {
     if (!pod.images.length) return
+    const { default: JSZip } = await import('jszip')
     const zip = new JSZip()
 
     const spathItem =
