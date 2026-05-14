@@ -1,17 +1,5 @@
 import type { Metadata, Viewport } from 'next'
-import { Poppins } from 'next/font/google'
-import { Providers } from '../providers'
-import ClientOnlyHeader from '@/components/layout/ClientOnlyHeader'
-import IntercomWidget from '@/components/layout/Intercom'
-import Analytics from '@/components/layout/Analytics'
-import '../globals.css'
-
-const poppins = Poppins({
-  weight: ['400', '500', '600', '700'],
-  subsets: ['latin'],
-  variable: '--font-poppins',
-  display: 'swap',
-})
+import SharedLayout from '@/components/layout/SharedLayout'
 
 export const viewport: Viewport = {
   themeColor: '#FF9E46',
@@ -83,16 +71,5 @@ export const metadata: Metadata = {
 }
 
 export default function FrLayout({ children }: { children: React.ReactNode }) {
-  return (
-    <html lang="fr-CA" className={poppins.variable}>
-      <body className="min-h-screen bg-white font-poppins antialiased">
-        <Analytics />
-        <Providers>
-          <ClientOnlyHeader />
-          {children}
-          <IntercomWidget />
-        </Providers>
-      </body>
-    </html>
-  )
+  return <SharedLayout lang="fr-CA" locale="fr">{children}</SharedLayout>
 }

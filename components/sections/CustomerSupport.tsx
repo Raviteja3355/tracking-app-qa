@@ -4,47 +4,79 @@ import { useState, useEffect, useRef } from "react";
 import "@/lib/i18n";
 import { useTranslation } from "react-i18next";
 import axios from "axios";
+import FormSelect from "@/components/ui/FormSelect";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
 type ContactReason =
   | ""
-  | "Questions about my deliveries"
-  | "Delivery issue"
-  | "Damaged package"
-  | "Missing items"
-  | "Other";
+  | "Address Correction"
+  | "Complaint (Delivery)"
+  | "Complaint (Driver)"
+  | "Delivery Inquiry"
+  | "Lost Parcel"
+  | "Second Delivery";
 
-const CONTACT_REASONS_DISPLAY: Array<{
-  value: ContactReason;
-  labelKey: string;
-}> = [
-  { value: "Questions about my deliveries", labelKey: "reasonDeliveries" },
-  { value: "Delivery issue", labelKey: "reasonDeliveryIssue" },
-  { value: "Damaged package", labelKey: "reasonDamagedPackage" },
-  { value: "Missing items", labelKey: "reasonMissingItems" },
-  { value: "Other", labelKey: "reasonOther" },
+const CONTACT_REASONS: Array<{ value: ContactReason; labelKey: string }> = [
+  { value: "Address Correction", labelKey: "reasonAddressCorrection" },
+  { value: "Complaint (Delivery)", labelKey: "reasonComplaintDelivery" },
+  { value: "Complaint (Driver)", labelKey: "reasonComplaintDriver" },
+  { value: "Delivery Inquiry", labelKey: "reasonDeliveryInquiry" },
+  { value: "Lost Parcel", labelKey: "reasonLostParcel" },
+  { value: "Second Delivery", labelKey: "reasonSecondDelivery" },
 ];
 
-const DETAIL_OPTIONS_DISPLAY: Array<{ value: string; labelKey: string }> = [
-  { value: "ETA inquiry", labelKey: "detailEtaInquiry" },
-  { value: "Update delivery info", labelKey: "detailUpdateInfo" },
-  { value: "Failed delivery", labelKey: "detailFailedDelivery" },
-  { value: "Wrong address", labelKey: "detailWrongAddress" },
-];
+const DETAILS_MAP: Record<string, Array<{ value: string; labelKey: string }>> = {
+  "Address Correction": [
+    { value: "Update Address or Contact Information", labelKey: "detailUpdateAddressContact" },
+  ],
+  "Complaint (Delivery)": [
+    { value: "Report a Damaged or Mishandled Package", labelKey: "detailReportDamagedPackage" },
+    { value: "Failed Delivery Attempt Inquiry", labelKey: "detailFailedDeliveryAttempt" },
+    { value: "Missing or Incorrect Items", labelKey: "detailMissingIncorrectItems" },
+    { value: "Received Unexpected Package", labelKey: "detailUnexpectedPackage" },
+    { value: "Other Delivery Issues", labelKey: "detailOtherDeliveryIssues" },
+  ],
+  "Complaint (Driver)": [
+    { value: "Failure to Follow Delivery Instructions", labelKey: "detailFailureFollowInstructions" },
+    { value: "Late or No Communication from the Driver", labelKey: "detailLateNoCommunication" },
+    { value: "Report A Proof of Delivery Photo Issue", labelKey: "detailPodPhotoIssue" },
+    { value: "Feedback on Driver", labelKey: "detailFeedbackDriver" },
+    { value: "Other Driver Issues", labelKey: "detailOtherDriverIssues" },
+  ],
+  "Delivery Inquiry": [
+    { value: "Rejected Delivery Attempt", labelKey: "detailRejectedDelivery" },
+    { value: "Failed Delivery Notification", labelKey: "detailFailedNotification" },
+    { value: "Update Delivery Instructions", labelKey: "detailUpdateInstructions" },
+    { value: "ETA Request", labelKey: "detailEtaRequest" },
+    { value: "Proof of Delivery Request", labelKey: "detailPodRequest" },
+    { value: "Return Package", labelKey: "detailReturnPackage" },
+    { value: "Other Delivery Inquiries", labelKey: "detailOtherDeliveryInquiries" },
+  ],
+  "Lost Parcel": [
+    { value: "Delivered to Wrong Address", labelKey: "detailDeliveredWrongAddress" },
+    { value: "Lost, Stolen, or Missing Parcel", labelKey: "detailLostStolenMissing" },
+    { value: "Other Lost Parcel Issues", labelKey: "detailOtherLostParcel" },
+  ],
+  "Second Delivery": [
+    { value: "Book Second Delivery", labelKey: "detailBookSecondDelivery" },
+  ],
+};
 
 const PRIORITY_MAP: Record<string, string> = {
-  "Damaged package": "1",
-  "Missing items": "1",
-  "Delivery issue": "2",
+  "Complaint (Delivery)": "1",
+  "Complaint (Driver)": "1",
+  "Lost Parcel": "1",
+  "Address Correction": "2",
 };
 
 const CF_FIELD_MAP: Record<string, string> = {
-  "Questions about my deliveries": "cf_delivery_inquiry",
-  "Delivery issue": "cf_delivery_inquiry",
-  "Damaged package": "cf_complaint_delivery",
-  "Missing items": "cf_general_inquiry",
-  Other: "cf_general_inquiry",
+  "Address Correction": "cf_address_correction",
+  "Complaint (Delivery)": "cf_complaint_delivery",
+  "Complaint (Driver)": "cf_complaint_driver",
+  "Delivery Inquiry": "cf_delivery_inquiry",
+  "Lost Parcel": "cf_lost_parcel",
+  "Second Delivery": "cf_second_delivery",
 };
 
 const ALLOWED_TYPES = ["application/pdf", "image/jpeg", "image/png"];
@@ -74,9 +106,9 @@ function FieldLabel({
 }
 
 const inputClass =
-  "support-field h-11 w-full rounded border border-uni-input-border bg-white px-3.5 text-[15px] text-uni-black";
+  "h-11 w-full rounded border border-uni-input-border bg-white px-3.5 text-[15px] text-uni-black focus:border-brand focus:shadow-[0_0_0_3px_rgba(255,143,28,0.12)] focus:outline-none";
 
-const selectClass = `${inputClass} support-select`;
+
 
 function Modal({
   message,
@@ -89,17 +121,11 @@ function Modal({
 }) {
   return (
     <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/60">
-      <div
-        className="mx-4 max-w-sm rounded-[20px] bg-white p-8 text-center"
-        style={{ boxShadow: "0 0 40px 0 #D4EFF7" }}
-      >
+      <div className="mx-4 max-w-sm rounded-[20px] bg-white p-8 text-center shadow-glow">
         <p className="text-[15px] text-uni-black">{message}</p>
         <button
           onClick={onClose}
-          className="mt-5 cursor-pointer rounded-[10px] px-10 py-3.5 text-[16px] font-medium text-white transition-opacity hover:opacity-90"
-          style={{
-            background: "linear-gradient(to top, #FF6A13 0%, #FF8F1C 100%)",
-          }}
+          className="mt-5 cursor-pointer rounded-[10px] px-10 py-3.5 text-[16px] font-medium text-white transition-opacity hover:opacity-90 bg-brand-gradient"
         >
           {btnLabel}
         </button>
@@ -196,19 +222,8 @@ export default function CustomerSupport() {
     if (fileRef.current) fileRef.current.value = "";
   }
 
-  async function handleSend() {
-    if (
-      !reason ||
-      !incident ||
-      !firstName ||
-      !lastName ||
-      !email ||
-      !content ||
-      !trackingNumber
-    ) {
-      setModal(t("errorFormIncomplete"));
-      return;
-    }
+  async function handleSend(e: React.SyntheticEvent<HTMLFormElement>) {
+    e.preventDefault();
 
     const priority = PRIORITY_MAP[reason] ?? "3";
     const cfField = CF_FIELD_MAP[reason];
@@ -296,62 +311,52 @@ export default function CustomerSupport() {
   return (
     <section
       id="support"
-      className="relative w-full py-15 pb-25 max-[720px]:py-10 max-[720px]:pb-17.5"
-      style={{ background: "linear-gradient(to top, #fff 0%, #EDF4F6 100%)" }}
+      className="relative w-full py-15 pb-25 max-[720px]:py-10 max-[720px]:pb-17.5 bg-section-gradient"
     >
       <div className="mx-auto max-w-280 px-8 max-[720px]:px-5">
         <div className="mx-auto max-w-150">
           <h2
-            className="mb-4 text-[36px] font-semibold text-uni-black max-[720px]:text-[28px]"
-            style={{ letterSpacing: "-0.72px", lineHeight: "1.1" }}
+            className="mb-4 text-[36px] font-semibold text-uni-black max-[720px]:text-[28px] tracking-[-0.72px] leading-[1.1]"
           >
             {t("supportHeading")}
           </h2>
-          <p className="mb-8 text-[16px] leading-relaxed text-[#333]">
+          <p className="mb-8 text-[16px] leading-relaxed text-uni-body">
             {t("supportIntro")}
           </p>
 
           {/* Card */}
-          <div
-            className="rounded-[20px] bg-white px-15 py-12.5 max-[720px]:px-6 max-[720px]:py-8"
-            style={{ boxShadow: "0 0 40px 0 #D4EFF7" }}
+          <form
+            onSubmit={handleSend}
+            noValidate={false}
+            className="rounded-[20px] bg-white px-15 py-12.5 max-[720px]:px-6 max-[720px]:py-8 shadow-glow"
           >
             {/* Contact Reason */}
             <div className="mb-5">
               <FieldLabel label={t("labelContactReason")} required htmlFor="contact-reason" />
-              <select
+              <FormSelect
                 id="contact-reason"
                 value={reason}
-                onChange={(e) =>
-                  onReasonChange(e.target.value as ContactReason)
-                }
-                className={selectClass}
-              >
-                <option value="">{t("selectPlaceholder")}</option>
-                {CONTACT_REASONS_DISPLAY.map((r) => (
-                  <option key={r.value} value={r.value}>
-                    {t(r.labelKey)}
-                  </option>
-                ))}
-              </select>
+                onChange={(v) => onReasonChange(v as ContactReason)}
+                options={CONTACT_REASONS.map((r) => ({ value: r.value, label: t(r.labelKey) }))}
+                placeholder={t("selectPlaceholder")}
+                required
+                aria-label={t("labelContactReason")}
+              />
             </div>
 
-            {/* Details */}
+            {/* Details — options change based on selected reason */}
             <div className="mb-5">
               <FieldLabel label={t("labelDetails")} required htmlFor="contact-details" />
-              <select
+              <FormSelect
                 id="contact-details"
                 value={incident}
-                onChange={(e) => setIncident(e.target.value)}
-                className={selectClass}
-              >
-                <option value="">{t("selectPlaceholder")}</option>
-                {DETAIL_OPTIONS_DISPLAY.map((opt) => (
-                  <option key={opt.value} value={opt.value}>
-                    {t(opt.labelKey)}
-                  </option>
-                ))}
-              </select>
+                onChange={setIncident}
+                options={(DETAILS_MAP[reason] ?? []).map((opt) => ({ value: opt.value, label: t(opt.labelKey) }))}
+                placeholder={t("selectPlaceholder")}
+                disabled={!reason}
+                required
+                aria-label={t("labelDetails")}
+              />
             </div>
 
             {/* First + Last Name */}
@@ -365,6 +370,7 @@ export default function CustomerSupport() {
                   onChange={(e) => setFirstName(e.target.value)}
                   placeholder={t("placeholderFirstName")}
                   className={inputClass}
+                  required
                 />
               </div>
               <div>
@@ -376,6 +382,7 @@ export default function CustomerSupport() {
                   onChange={(e) => setLastName(e.target.value)}
                   placeholder={t("placeholderLastName")}
                   className={inputClass}
+                  required
                 />
               </div>
             </div>
@@ -390,6 +397,7 @@ export default function CustomerSupport() {
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder={t("placeholderEmail")}
                 className={inputClass}
+                required
               />
             </div>
 
@@ -403,40 +411,38 @@ export default function CustomerSupport() {
                 onChange={(e) => setTrackingNumber(e.target.value)}
                 placeholder="JK100000000000"
                 className={inputClass}
+                required
               />
             </div>
 
             {/* Country */}
             <div className="mb-5">
               <FieldLabel label={t("labelCountry")} required htmlFor="support-country" />
-              <select
+              <FormSelect
                 id="support-country"
                 value={country}
-                onChange={(e) => setCountry(e.target.value)}
-                className={selectClass}
-              >
-                <option value="">{t("countryPlaceholder")}</option>
-                <option value="Canada">{t("countryCanada")}</option>
-                <option value="USA">{t("countryUsa")}</option>
-              </select>
+                onChange={setCountry}
+                options={[
+                  { value: "Canada", label: t("countryCanada") },
+                  { value: "USA", label: t("countryUsa") },
+                ]}
+                placeholder={t("countryPlaceholder")}
+                required
+                aria-label={t("labelCountry")}
+              />
             </div>
 
             {/* Province / State */}
             {states.length > 0 && (
               <div className="mb-5">
                 <FieldLabel label={t("labelProvinceState")} required htmlFor="province-state" />
-                <select
+                <FormSelect
                   id="province-state"
                   value={selectedState}
-                  onChange={(e) => onStateChange(e.target.value)}
-                  className={selectClass}
-                >
-                  {states.map((s) => (
-                    <option key={s} value={s}>
-                      {s}
-                    </option>
-                  ))}
-                </select>
+                  onChange={onStateChange}
+                  options={states.map((s) => ({ value: s, label: s }))}
+                  aria-label={t("labelProvinceState")}
+                />
               </div>
             )}
 
@@ -444,18 +450,13 @@ export default function CustomerSupport() {
             {cities.length > 0 && (
               <div className="mb-5">
                 <FieldLabel label={t("labelLocation")} required htmlFor="city-warehouse" />
-                <select
+                <FormSelect
                   id="city-warehouse"
                   value={warehouse}
-                  onChange={(e) => setWarehouse(e.target.value)}
-                  className={selectClass}
-                >
-                  {cities.map((c) => (
-                    <option key={c} value={c}>
-                      {c}
-                    </option>
-                  ))}
-                </select>
+                  onChange={setWarehouse}
+                  options={cities.map((c) => ({ value: c, label: c }))}
+                  aria-label={t("labelLocation")}
+                />
               </div>
             )}
 
@@ -502,7 +503,8 @@ export default function CustomerSupport() {
                 onChange={(e) => setContent(e.target.value)}
                 maxLength={500}
                 placeholder={t("placeholderHelpText")}
-                className="support-field min-h-30 w-full resize-y rounded border border-uni-input-border bg-white px-3.5 py-2.5 text-[15px] text-uni-black"
+                className="min-h-30 w-full resize-y rounded border border-uni-input-border bg-white px-3.5 py-2.5 text-[15px] text-uni-black focus:border-brand focus:shadow-[0_0_0_3px_rgba(255,143,28,0.12)] focus:outline-none"
+                required
               />
               <p className="mt-1.5 text-[12px] text-uni-muted">
                 {t("fileHelpText")}
@@ -512,19 +514,14 @@ export default function CustomerSupport() {
             {/* Send button */}
             <div className="text-center">
               <button
-                type="button"
-                onClick={handleSend}
+                type="submit"
                 disabled={loading}
-                className="cursor-pointer rounded-[10px] px-10 py-3.5 text-[16px] font-medium text-white transition-all hover:-translate-y-px hover:shadow-[4px_6px_14px_0_rgba(255,106,19,0.3)] disabled:cursor-not-allowed disabled:opacity-60"
-                style={{
-                  background:
-                    "linear-gradient(to top, #FF6A13 0%, #FF8F1C 100%)",
-                }}
+                className="cursor-pointer rounded-[10px] px-10 py-3.5 text-[16px] font-medium text-white transition-all hover:-translate-y-px hover:shadow-[4px_6px_14px_0_rgba(255,106,19,0.3)] disabled:cursor-not-allowed disabled:opacity-60 bg-brand-gradient"
               >
                 {loading ? t("btnSending") : t("btnSend")}
               </button>
             </div>
-          </div>
+          </form>
         </div>
       </div>
 
