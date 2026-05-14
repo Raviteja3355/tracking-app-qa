@@ -1,36 +1,84 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# UniUni Tracking Page
 
-## Getting Started
+Standalone package tracking page for [uniuni.com/tracking/](https://www.uniuni.com/tracking/) and [uniuni.com/fr/suivi/](https://www.uniuni.com/fr/suivi/). Built as a static site (Next.js `output: 'export'`) served by Nginx on AWS EKS behind CloudFront, completely decoupled from the main WordPress infrastructure.
 
-First, run the development server:
+## Local development
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npm install
+npm run dev       # http://localhost:3000
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Copy `.env.local` from a teammate or 1Password — the app won't call any APIs without it.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+Required env variables:
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+| Variable | Purpose |
+|---|---|
+| `NEXT_PUBLIC_DELIVERY_API` | Main tracking API |
+| `NEXT_PUBLIC_DISPATCH_API` | Dispatch / map API |
+| `NEXT_PUBLIC_DRIVER_APP_CA` / `_US` | Driver app API (notices, POD) |
+| `NEXT_PUBLIC_EDD_API_URL` + `_KEY` | Estimated delivery date |
+| `NEXT_PUBLIC_TRACKING_API_KEY` | Auth key for tracking API |
+| `NEXT_PUBLIC_GTM_ID` | Google Tag Manager (optional) |
+| `NEXT_PUBLIC_HUBSPOT_ID` | HubSpot (optional) |
+| `NEXT_PUBLIC_INTERCOM_APP_ID` | Intercom widget (optional) |
 
-## Learn More
+## Build & deploy
 
-To learn more about Next.js, take a look at the following resources:
+```bash
+npm run build     # outputs static files to out/
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+CI/CD (CircleCI) builds a Docker image and pushes to ECR. CloudFront routes `/tracking/*` and `/fr/suivi/*` to the EKS cluster. See [Confluence — Architecture Design](https://unirequest.atlassian.net/wiki/spaces/TD/pages/2406612995) for the full deployment diagram.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+**Local Docker test:**
 
-## Deploy on Vercel
+```bash
+docker build -f Dockerfile.dev -t uniuni-tracking .
+docker run -p 8080:80 uniuni-tracking
+# open http://localhost:8080/tracking
+```
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+> `Dockerfile.dev` bakes `.env.local` into the image at build time. Never use it for production.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Project structure
+
+```
+app/
+├── (en)/          English routes: / and /tracking/
+├── (fr)/          French route: /fr/suivi/
+└── globals.css    Tailwind v4 theme tokens
+
+components/
+├── layout/        Structural shell: SharedLayout, Header, Footer
+├── sections/      Page content blocks: FAQ, CustomerSupport, TrackingHero, CookieBanner
+├── tracking/      Tracking feature: input, results, modals
+├── scripts/       Third-party script injections: Analytics (GTM), Intercom
+├── icons/         SVG icon components
+└── ui/            Generic reusable primitives
+
+lib/
+├── api/           API call functions
+├── hooks/         useTracking, usePod
+├── i18n/          Translation JSON files
+├── types/         Shared TypeScript types
+└── utils/         formatTime, validation, etc.
+
+docs/
+└── ARCHITECTURE.md   Explains SSG, i18n strategy, hydration decisions
+```
+
+## Adding a translation key
+
+1. Add the key to `lib/i18n/locales/en.json` and `fr.json`
+2. For **above-fold components** (Header, Footer, FAQ, TrackingInput): access via `t['yourKey']` — the locale prop is already threaded through
+3. For **interactive components** (ResultCard, modals, etc.): use `useTranslation()` as usual
+
+## Routes
+
+| URL | Page |
+|---|---|
+| `/` | English tracking page (redirects to `/tracking/` in production) |
+| `/tracking/` | English tracking page |
+| `/fr/suivi/` | French tracking page |
