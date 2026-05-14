@@ -64,28 +64,28 @@ function MoreMenu({ onCopy, onDownload }: { onCopy: () => void; onDownload: () =
 function InvalidSection({ tnos }: { tnos: string[] }) {
   const { t } = useTranslation()
   return (
-    <div className="mt-5 flex" style={{ flexDirection: 'row' }}>
-      <div style={{ flex: 1 }}>
+    <div className="mt-5 flex flex-row">
+      <div className="flex-1">
         <div className="rounded border border-[#f5c6cb] bg-[#ffeeee] p-4">
-          <div className="mb-2 font-semibold" style={{ color: '#dc3545' }}>{t('alertTitle')}</div>
-          <div className="hidden desk:block" style={{ fontSize: '14px', color: '#000' }}>
+          <div className="mb-2 font-semibold text-[#dc3545]">{t('alertTitle')}</div>
+          <div className="hidden text-[14px] text-black desk:block">
             {t('alertNoInfoDesktop')}{' '}
-            <a href="https://www.uniuni.com/support/" style={{ textDecoration: 'underline', color: '#000' }}>{t('linkCustomerService')}</a>{' '}
+            <a href="https://www.uniuni.com/support/" className="underline text-black">{t('linkCustomerService')}</a>{' '}
             {t('alertNoInfoSuffix')}
           </div>
-          <div className="block desk:hidden" style={{ fontSize: '14px', color: '#000' }}>
+          <div className="block text-[14px] text-black desk:hidden">
             {t('alertNoInfoMobile')}{' '}
-            <a href="https://www.uniuni.com/support/" style={{ textDecoration: 'underline', color: '#000' }}>{t('linkCustomerService')}</a>.
+            <a href="https://www.uniuni.com/support/" className="underline text-black">{t('linkCustomerService')}</a>.
           </div>
-          <div className="mt-2" style={{ fontSize: '14px' }}>
+          <div className="mt-2 text-[14px]">
             {tnos.map((t, i) => (
-              <div key={i} style={{ display: 'flex', alignItems: 'center' }}>&bull;&nbsp;{t}</div>
+              <div key={i} className="flex items-center">&bull;&nbsp;{t}</div>
             ))}
           </div>
         </div>
       </div>
       <div className="ml-4 hidden items-center desk:flex">
-        <img src="https://cdn.uniuni.com/wp-content/uploads/2023/07/invalid-search.png" alt="" style={{ width: 120 }} />
+        <img src="https://cdn.uniuni.com/wp-content/uploads/2023/07/invalid-search.png" alt="" className="w-30" />
       </div>
     </div>
   )
@@ -141,34 +141,33 @@ export default function TrackingResults({
     return (
       <div ref={resultsRef} className="mb-25 w-full font-poppins">
         <div
-          className="category-title flex cursor-pointer items-baseline desk:px-0 mob:px-5"
-          style={{ paddingTop: 40, display: 'flex', alignItems: 'baseline' }}
+          className="flex cursor-pointer items-baseline pt-10 pb-10 desk:px-0 mob:px-5 mob:-mt-7.5 mob:pt-3.75 mob:pb-3.75"
           onClick={onClosePiecesView}
         >
           <svg width="10" height="16" viewBox="0 0 10 16" fill="none" xmlns="http://www.w3.org/2000/svg">
             <path d="M9.2541 0.241064C9.55216 0.533264 9.57926 0.990508 9.33539 1.31272L9.2541 1.40503L2.52658 8L9.2541 14.595C9.55216 14.8872 9.57926 15.3444 9.33539 15.6666L9.2541 15.7589C8.95604 16.0511 8.48963 16.0777 8.16096 15.8386L8.06679 15.7589L0.745899 8.58198C0.44784 8.28978 0.420743 7.83254 0.66461 7.51033L0.745899 7.41802L8.06679 0.241064C8.39466 -0.0803548 8.92624 -0.0803548 9.2541 0.241064Z" fill="#121212" />
           </svg>
-          <div className="parcel-overall-title" style={{ marginLeft: 10, paddingTop: 30 }}>
+          <div className="font-poppins text-[24px] font-semibold ml-2.5 pt-7.5 mob:text-[18px]">
             {t('backToTracking')}
           </div>
         </div>
 
-        <div className="parcel-overall-summary flex" style={{ borderTop: '1px solid #c3c3c3' }}>
-          <div className="parcel-overall-summary-left flex items-center font-semibold">
-            <svg width="28" height="28" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ flexShrink: 0 }}>
+        <div className="w-full flex mb-5 border-t border-[#c3c3c3] pt-10 mob:flex-col mob:pt-5 mob:px-5">
+          <div className="flex font-semibold w-2/5 items-center text-black font-poppins text-[24px] mob:w-full mob:text-[18px]">
+            <svg width="28" height="28" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg" className="shrink-0">
               <path fillRule="evenodd" clipRule="evenodd" d="M15.9332 4.50698H20.0265C24.9465 4.50698 27.3465 7.13364 27.3332 12.5203V19.0136C27.3332 24.1603 24.1598 27.3336 18.9998 27.3336H8.9865C3.85317 27.3336 0.666504 24.1603 0.666504 19.0003V8.98698C0.666504 3.46698 3.11984 0.666976 7.95984 0.666976H10.0665C11.3078 0.653642 12.4665 1.22698 13.2265 2.20031L14.3998 3.76031C14.7732 4.22698 15.3332 4.50698 15.9332 4.50698ZM7.8265 18.387H20.1732C20.7198 18.387 21.1598 17.9336 21.1598 17.387C21.1598 16.827 20.7198 16.387 20.1732 16.387H7.8265C7.2665 16.387 6.8265 16.827 6.8265 17.387C6.8265 17.9336 7.2665 18.387 7.8265 18.387Z" fill="#101820" />
             </svg>
-            <div className="parcel-overall-summary-left-content">{piecesView.masterTno}</div>
+            <div className="text-black ml-7.5 mr-2.5 mob:ml-2">{piecesView.masterTno}</div>
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="hidden desk:block">
               <path d="M19 8.5L12 15.5L5 8.5" stroke="#121212" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
             </svg>
           </div>
-          <div className="parcel-overall-summary-right">
+          <div className="w-1/5 ml-2.5 text-uni-black font-poppins text-[24px] font-semibold mob:w-auto mob:ml-0 mob:mt-2 mob:text-[18px]">
             {piecesView.deliveredCount}/{piecesView.results.length} {t('pieceDelivered')}
           </div>
         </div>
 
-        <div className="parcel-overall-content">
+        <div className="font-poppins">
           {piecesView.results.map((piece, i) => (
             <ParcelCard
               key={piece.tno}
@@ -196,7 +195,7 @@ export default function TrackingResults({
         </div>
       )}
 
-      <div className="tracking-list" style={{ width: '100%' }}>
+      <div className="w-full font-poppins mb-25">
         {validResults.map((result, i) => (
           <ParcelCard
             key={result.tno}

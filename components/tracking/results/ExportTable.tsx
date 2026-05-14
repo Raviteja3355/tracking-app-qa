@@ -11,8 +11,8 @@ interface Props {
 export default function ExportTable({ rows }: Props) {
   const { t } = useTranslation()
   return (
-    <table id="excel-table" style={{ display: 'none' }}>
-      <thead id="excel-table-head" style={{ display: 'none' }}>
+    <table id="excel-table" className="hidden">
+      <thead id="excel-table-head">
         <tr>
           <th>{t('colTrackingNumber')}</th>
           <th>{t('colLatestCity')}</th>
@@ -24,7 +24,7 @@ export default function ExportTable({ rows }: Props) {
           <th>{t('colEstimatedDeliveryTimeEnd')}</th>
         </tr>
       </thead>
-      <tbody id="excel-table-body" style={{ display: 'none' }}>
+      <tbody id="excel-table-body">
         {rows.map((row, i) => (
           <tr key={i}>
             <td>{row.tno}</td>

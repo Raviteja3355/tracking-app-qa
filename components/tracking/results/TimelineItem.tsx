@@ -38,8 +38,7 @@ function ReturnContact() {
         Please contact{' '}
         <a
           href="https://www.uniuni.com/support/#form"
-          className="font-bold underline"
-          style={{ color: '#FF9E46' }}
+          className="font-bold underline text-[#FF9E46]"
         >
           Customer Service
         </a>
@@ -111,7 +110,7 @@ export default function TimelineItem({ item, index, totalItems, result, onViewPo
           <div className="flex items-center">
             <span className={showCurrentDot ? 'block' : 'hidden'}><DotCurrent /></span>
             <span className={showCheckDot ? 'block' : 'hidden'}><DotCheck /></span>
-            <div className="status-title ml-1.5 w-[99%] pl-[30px] font-[family-name:var(--font-poppins)] text-lg font-semibold text-[#212529]">
+            <div className="ml-1.5 w-[99%] pl-7.5 font-poppins text-lg leading-normal font-semibold text-[#212529]">
               {pathInfo}.
             </div>
           </div>
@@ -141,7 +140,6 @@ export default function TimelineItem({ item, index, totalItems, result, onViewPo
         </div>
         <div
           className={`ml-[5px] pb-6 pl-[18px] text-[11px] leading-4 ${connectorClass}`}
-          style={isOldest ? { borderLeft: '1px dashed transparent' } : {}}
         >
           <div className="text-base font-normal text-[#212529]">{displayDate}</div>
           <div className="mt-1 text-base font-semibold text-[#212529]">{pathInfo}.</div>
