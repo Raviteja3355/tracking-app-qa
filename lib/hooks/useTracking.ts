@@ -81,6 +81,7 @@ export function useTracking() {
     errorMessage: null,
   })
   const [inputValue, setInputValue] = useState('')
+  const [apiError, setApiError] = useState(false)
   const resultsRef = useRef<HTMLDivElement>(null)
 
   const { mutate: runTrack, isPending: loading } = useMutation({
@@ -104,18 +105,18 @@ export function useTracking() {
         setInvalidTnos([])
         setEddMap({})
         setExportRows([])
+        setApiError(true)
         return
       }
+      setApiError(false)
 
       const valid = trackRes.data.valid_tno ?? []
       const invalidStr = trackRes.data.invalid_tno ?? ''
 
       const extraInvalid: string[] = []
-      const actualValid: TrackingResult[] = []
       for (const res of valid) {
         const hasPath = res.master_tno ? (res.orders_list?.length ?? 0) > 0 : (res.spath_list?.length ?? 0) > 0
         if (!hasPath) extraInvalid.push(res.tno)
-        else actualValid.push(res)
       }
 
       const invalids = [
@@ -123,11 +124,11 @@ export function useTracking() {
         ...extraInvalid,
       ]
 
-      setValidResults(actualValid)
+      setValidResults(valid)
       setInvalidTnos(invalids)
       setEddMap(eddResult)
-      setExportRows(buildExportRows(actualValid, eddResult))
-      setOpenDetails(actualValid.length > 0 ? { [actualValid[0].tno]: true } : {})
+      setExportRows(buildExportRows(valid, eddResult))
+      setOpenDetails(valid.length > 0 ? { [valid[0].tno]: true } : {})
       setPiecesView(null)
 
       setTimeout(() => {
@@ -140,6 +141,7 @@ export function useTracking() {
     (input: string) => {
       const cleaned = input.trim()
       if (!cleaned) return false
+      setApiError(false)
       runTrack(cleaned)
       return true
     },
@@ -188,6 +190,7 @@ export function useTracking() {
     zipModal,
     loading,
     inputValue,
+    apiError,
     resultsRef,
     setInputValue,
     track,
