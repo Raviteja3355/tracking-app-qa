@@ -1,11 +1,9 @@
 'use client'
 
 import { useState, useRef, useEffect, useId, useCallback } from 'react'
+import type { SelectOption } from '@/lib/types'
 
-export interface SelectOption {
-  value: string
-  label: string
-}
+export type { SelectOption }
 
 interface Props {
   id?: string

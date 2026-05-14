@@ -1,10 +1,30 @@
-import type { SpathItem, TrackingResult } from '../types'
+/**
+ * POD (Proof of Delivery) photo watermarking.
+ * POD（投递证明）照片水印处理。
+ *
+ * When a recipient views or downloads a POD photo, the image is stamped with
+ * the delivery GPS coordinates and timestamp sourced from the tracking scan
+ * that was closest to the delivery event. This serves as tamper-evident proof
+ * that the photo was taken at the correct location and time.
+ *
+ * 当收件人查看或下载 POD 照片时，图片会被盖上投递 GPS 坐标和时间戳，
+ * 数据来源于距离投递事件最近的追踪扫描记录。
+ * 这作为防篡改证明，确认照片拍摄于正确的地点和时间。
+ *
+ * The watermark is rendered client-side on a Canvas element so it is embedded
+ * into the image before display and before any download is triggered — the
+ * server never serves a pre-watermarked image.
+ *
+ * 水印在客户端通过 Canvas 元素渲染，在图片展示和下载触发之前嵌入——
+ * 服务端从不提供预先添加水印的图片。
+ */
 
-interface WatermarkData {
-  dateTime: string
-  coordinates: { latitude: string; longitude: string }
-}
+import type { SpathItem, TrackingResult, WatermarkData } from '../types'
 
+/**
+ * Extracts the datetime string and GPS coordinates from a spath scan event.
+ * 从 spath 扫描事件中提取日期时间字符串和 GPS 坐标。
+ */
 function generateWatermarkText(orderData: SpathItem): WatermarkData {
   const lat =
     orderData.lat != null && Number(orderData.lat) !== 0
@@ -18,6 +38,10 @@ function generateWatermarkText(orderData: SpathItem): WatermarkData {
   return { dateTime, coordinates: { latitude: lat, longitude: lng } }
 }
 
+/**
+ * Finds the largest font size that fits `text` within `targetWidth` pixels.
+ * 找出在 `targetWidth` 像素宽度内能容纳 `text` 的最大字号。
+ */
 function calculateFontSize(ctx: CanvasRenderingContext2D, text: string, targetWidth: number): number {
   let fontSize = 24
   let min = 12
@@ -35,6 +59,10 @@ function calculateFontSize(ctx: CanvasRenderingContext2D, text: string, targetWi
   return fontSize
 }
 
+/**
+ * Draws white text with a layered dark shadow so it remains legible on any photo background.
+ * 绘制带有多层深色阴影的白色文字，确保在任何照片背景上都清晰可读。
+ */
 function drawTextWithShadow(
   ctx: CanvasRenderingContext2D,
   text: string,
@@ -57,6 +85,15 @@ function drawTextWithShadow(
   ctx.fillText(text, x, y)
 }
 
+/**
+ * Draws the watermark overlay onto an already-sized canvas.
+ * Timestamp is placed near the top-left; GPS coordinates near the bottom-left.
+ * Font size is calculated dynamically so the overlay scales with the image resolution.
+ *
+ * 在已设置尺寸的 Canvas 上绘制水印叠层。
+ * 时间戳置于左上角附近，GPS 坐标置于左下角附近。
+ * 字号动态计算，使叠层随图片分辨率自适应缩放。
+ */
 export function drawWatermarkOnCanvas(
   canvas: HTMLCanvasElement,
   ctx: CanvasRenderingContext2D,
@@ -122,6 +159,15 @@ export function drawWatermarkOnCanvas(
   }
 }
 
+/**
+ * Finds the most recent spath scan event that carries GPS coordinates.
+ * Not all scan events include location data; we walk the list backwards to
+ * find the last event where lat/lng are non-zero.
+ *
+ * 找出最近一条带有 GPS 坐标的 spath 扫描事件。
+ * 并非所有扫描事件都包含位置数据；
+ * 我们从列表末尾向前遍历，找到最后一条 lat/lng 非零的事件。
+ */
 export function findWatermarkSpathItem(result: TrackingResult): SpathItem | null {
   if (!Array.isArray(result.spath_list) || result.spath_list.length === 0) return null
   for (let i = result.spath_list.length - 1; i >= 0; i--) {
@@ -133,6 +179,15 @@ export function findWatermarkSpathItem(result: TrackingResult): SpathItem | null
   return null
 }
 
+/**
+ * Resolves which spath event to use as the watermark source.
+ * Prefers the last scan event if it has location data; falls back to
+ * findWatermarkSpathItem to find the most recent event with coordinates.
+ *
+ * 确定用作水印数据来源的 spath 事件。
+ * 优先使用最后一条扫描事件（如果含有位置数据）；
+ * 否则回退到 findWatermarkSpathItem，找最近一条含坐标的事件。
+ */
 export function resolveWatermarkData(result: TrackingResult): SpathItem | null {
   if (!Array.isArray(result.spath_list) || result.spath_list.length === 0) return null
   const last = result.spath_list[result.spath_list.length - 1]
@@ -142,6 +197,13 @@ export function resolveWatermarkData(result: TrackingResult): SpathItem | null {
   return findWatermarkSpathItem(result)
 }
 
+/**
+ * Full pipeline: loads a POD image URL, draws the watermark overlay, and
+ * returns a Blob ready for display in the POD modal or triggering a download.
+ *
+ * 完整流程：加载 POD 图片 URL，绘制水印叠层，
+ * 返回可用于 POD 弹窗展示或触发下载的 Blob。
+ */
 export async function createWatermarkedBlob(imageSrc: string, spathItem: SpathItem): Promise<Blob> {
   return new Promise((resolve, reject) => {
     const canvas = document.createElement('canvas')
@@ -169,6 +231,16 @@ export async function createWatermarkedBlob(imageSrc: string, spathItem: SpathIt
   })
 }
 
+/**
+ * Determines the file extension to use when saving a downloaded POD image.
+ * POD images arrive from multiple sources (base64 data URLs from the standard API,
+ * CDN URLs from the URP API), so the extension must be inferred from the
+ * blob MIME type or the URL, not assumed to be JPEG.
+ *
+ * 确定保存下载的 POD 图片时使用的文件扩展名。
+ * POD 图片来自多种来源（标准 API 的 base64 data URL、URP API 的 CDN URL），
+ * 因此扩展名须从 blob MIME 类型或 URL 中推断，不能直接假设为 JPEG。
+ */
 export function getImageFileExtension(imageUrl: string, blob?: Blob): string {
   if (blob?.type) {
     if (blob.type.includes('png')) return 'png'

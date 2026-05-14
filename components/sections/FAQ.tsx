@@ -1,9 +1,9 @@
 import FAQItem from "./FAQItem";
 import en from "@/lib/i18n/locales/en.json";
 import fr from "@/lib/i18n/locales/fr.json";
+import type { Locale } from "@/lib/types";
 
 const translations = { en, fr } as const;
-type Locale = keyof typeof translations;
 
 export default function FAQ({ locale = "en" }: { locale?: Locale }) {
   const t = translations[locale] as Record<string, string>;

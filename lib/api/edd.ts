@@ -1,11 +1,5 @@
-import type { EddData, EddMap } from '../types'
+import type { EddMap, EddResponseItem } from '../types'
 import { cfg, http } from './config'
-
-interface EddResponseItem {
-  tno: string
-  edd_enabled: boolean
-  delivery_estimate?: EddData['delivery_estimate']
-}
 
 export async function fetchEdd(tnos: string[]): Promise<EddMap> {
   try {

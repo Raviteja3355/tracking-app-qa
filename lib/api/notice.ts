@@ -1,9 +1,5 @@
-import type { NoticeItem } from '../types'
+import type { NoticeItem, NoticeResponse } from '../types'
 import { cfg, http } from './config'
-
-interface NoticeResponse {
-  biz_data?: NoticeItem[]
-}
 
 export async function fetchWarehouseNotices(
   warehouse: number,

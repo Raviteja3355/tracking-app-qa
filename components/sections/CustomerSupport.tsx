@@ -4,18 +4,10 @@ import { useState, useEffect, useRef } from "react";
 import "@/lib/i18n";
 import { useTranslation } from "react-i18next";
 import axios from "axios";
+import { supportCfg } from "@/lib/api/config";
+import { Support } from "@/lib/constants";
+import type { ContactReason } from "@/lib/types";
 import FormSelect from "@/components/ui/FormSelect";
-
-// ─── Types ───────────────────────────────────────────────────────────────────
-
-type ContactReason =
-  | ""
-  | "Address Correction"
-  | "Complaint (Delivery)"
-  | "Complaint (Driver)"
-  | "Delivery Inquiry"
-  | "Lost Parcel"
-  | "Second Delivery";
 
 const CONTACT_REASONS: Array<{ value: ContactReason; labelKey: string }> = [
   { value: "Address Correction", labelKey: "reasonAddressCorrection" },
@@ -79,12 +71,6 @@ const CF_FIELD_MAP: Record<string, string> = {
   "Second Delivery": "cf_second_delivery",
 };
 
-const ALLOWED_TYPES = ["application/pdf", "image/jpeg", "image/png"];
-const MAX_FILE_SIZE_MB = 2;
-const TICKET_API = "https://map.cluster.uniexpress.org/business/ticket";
-const TERRITORIES_API = "https://delivery-api.uniuni.ca/cargo/territories";
-const GROUP_ID = 151000026065;
-const AGENT_ID = 151000701681;
 
 // ─── Sub-components ──────────────────────────────────────────────────────────
 
@@ -120,7 +106,7 @@ function Modal({
   btnLabel: string;
 }) {
   return (
-    <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/60">
+    <div className="fixed inset-0 z-9999 flex items-center justify-center bg-black/60">
       <div className="mx-4 max-w-sm rounded-[20px] bg-white p-8 text-center shadow-glow">
         <p className="text-[15px] text-uni-black">{message}</p>
         <button
@@ -164,7 +150,7 @@ export default function CustomerSupport() {
   useEffect(() => {
     axios
       .get<{ data: Array<{ state: string; cities: string[] }> }>(
-        `${TERRITORIES_API}?country=${country}`,
+        `${supportCfg.territoriesUrl}?country=${country}`,
       )
       .then(({ data }) => {
         if (!data?.data?.length) return;
@@ -197,12 +183,12 @@ export default function CustomerSupport() {
   function handleFile(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0] ?? null;
     if (!file) return;
-    if (file.size > MAX_FILE_SIZE_MB * 1024 * 1024) {
+    if (file.size > Support.maxFileSizeMb * 1024 * 1024) {
       setModal(t("errorFileTooLarge"));
       e.target.value = "";
       return;
     }
-    if (!ALLOWED_TYPES.includes(file.type)) {
+    if (!(Support.allowedFileTypes as readonly string[]).includes(file.type)) {
       setModal(t("errorFileType"));
       e.target.value = "";
       return;
@@ -254,10 +240,10 @@ export default function CustomerSupport() {
           "custom_fields[cf_tracking_number]",
           trackingNumber || "000",
         );
-        form.append("responder_id", String(AGENT_ID));
-        form.append("group_id", String(GROUP_ID));
+        form.append("responder_id", String(supportCfg.agentId));
+        form.append("group_id", String(supportCfg.groupId));
         if (cfField) form.append(`custom_fields[${cfField}]`, incident);
-        const res = await axios.post<{ status: string }>(TICKET_API, form, {
+        const res = await axios.post<{ status: string }>(supportCfg.ticketUrl, form, {
           headers: { "Content-Type": "multipart/form-data" },
         });
         response = res.data;
@@ -270,8 +256,8 @@ export default function CustomerSupport() {
           name,
           type: reason,
           email,
-          responder_id: AGENT_ID,
-          group_id: GROUP_ID,
+          responder_id: supportCfg.agentId,
+          group_id: supportCfg.groupId,
           custom_fields: {
             cf_country: country,
             cf_tracking_number: trackingNumber || "000",
@@ -279,7 +265,7 @@ export default function CustomerSupport() {
             ...(cfField ? { [cfField]: incident } : {}),
           },
         };
-        const res = await axios.post<{ status: string }>(TICKET_API, body);
+        const res = await axios.post<{ status: string }>(supportCfg.ticketUrl, body);
         response = res.data;
       }
 

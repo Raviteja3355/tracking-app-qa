@@ -1,28 +1,6 @@
 import { cfg, http } from './config'
 import { formatZipCode, validateURPTrackingNo } from '../utils/validation'
-
-interface SignatureResponse {
-  status: string
-  data?: { signatures: string[] }
-  ret_msg?: string
-}
-
-interface URPSignatureResponse {
-  code: number
-  data?: { images: string[] }
-  ret_msg?: string
-}
-
-interface DownloadResponse {
-  status: string
-  data?: string
-  ret_msg?: string
-}
-
-interface URPDownloadResponse {
-  status: string
-  data?: string
-}
+import type { SignatureResponse, URPSignatureResponse, DownloadResponse, URPDownloadResponse } from '../types'
 
 export async function fetchPodImages(tno: string, zip: string): Promise<string[]> {
   try {

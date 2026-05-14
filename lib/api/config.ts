@@ -10,4 +10,11 @@ export const cfg = {
   trackingApiKey: process.env.NEXT_PUBLIC_TRACKING_API_KEY as string,
 }
 
+export const supportCfg = {
+  ticketUrl: 'https://map.cluster.uniexpress.org/business/ticket',
+  territoriesUrl: 'https://delivery-api.uniuni.ca/cargo/territories',
+  groupId: 151000026065,
+  agentId: 151000701681,
+}
+
 export const http = axios.create({ timeout: 30_000 })
