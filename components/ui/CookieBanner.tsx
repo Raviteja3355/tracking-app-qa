@@ -3,6 +3,7 @@
 import { useSyncExternalStore } from 'react'
 import '@/lib/i18n'
 import { useTranslation } from 'react-i18next'
+import { Links } from '@/lib/constants'
 
 function subscribe(cb: () => void) {
   window.addEventListener('cookie-consent-updated', cb)
@@ -50,7 +51,7 @@ export default function CookieBanner() {
           <span className="font-semibold mr-1.5">{t('cookieBannerTitle')}</span>
           {t('cookieBannerText')}{' '}
           <a
-            href="https://www.uniuni.com/cookies-policy/"
+            href={Links.cookies}
             target="_blank"
             rel="noopener noreferrer"
             className="text-brand font-medium underline"

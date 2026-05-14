@@ -4,6 +4,7 @@ import Script from "next/script";
 import { useSyncExternalStore } from "react";
 
 const GTM_ID = process.env.NEXT_PUBLIC_GTM_ID;
+const GA4_ID = process.env.NEXT_PUBLIC_GA4_ID;
 const HUBSPOT_ID = process.env.NEXT_PUBLIC_HUBSPOT_ID;
 
 function subscribe(cb: () => void) {
@@ -24,6 +25,17 @@ export default function Analytics() {
 
   return (
     <>
+      {GA4_ID && (
+        <Script id="ga4-config" strategy="afterInteractive">{`
+          window.dataLayer = window.dataLayer || [];
+          function gtag(){dataLayer.push(arguments);}
+          gtag('config', '${GA4_ID}', {
+            link_attribution: true,
+            anonymize_ip: true,
+            send_page_view: false
+          });
+        `}</Script>
+      )}
       {GTM_ID && (
         <>
           <Script id="gtm" strategy="afterInteractive">{`
