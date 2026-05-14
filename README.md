@@ -11,8 +11,6 @@ npm run dev       # http://localhost:3000
 
 Copy `.env.local` from a teammate or 1Password — the app won't call any APIs without it.
 
-Required env variables:
-
 | Variable | Purpose |
 |---|---|
 | `NEXT_PUBLIC_DELIVERY_API` | Main tracking API |
@@ -21,8 +19,10 @@ Required env variables:
 | `NEXT_PUBLIC_EDD_API_URL` + `_KEY` | Estimated delivery date |
 | `NEXT_PUBLIC_TRACKING_API_KEY` | Auth key for tracking API |
 | `NEXT_PUBLIC_GTM_ID` | Google Tag Manager (optional) |
+| `NEXT_PUBLIC_GA4_ID` | GA4 Measurement ID — explicit gtag config (optional) |
 | `NEXT_PUBLIC_HUBSPOT_ID` | HubSpot (optional) |
 | `NEXT_PUBLIC_INTERCOM_APP_ID` | Intercom widget (optional) |
+| `NEXT_PUBLIC_CLARITY_ID` | Microsoft Clarity (optional) |
 
 ## Build & deploy
 
@@ -48,72 +48,73 @@ docker run -p 8080:80 uniuni-tracking
 app/
 ├── (en)/          English routes: / and /tracking/
 ├── (fr)/          French route: /fr/suivi/
-└── globals.css    Tailwind v4 theme tokens
+└── globals.css    Tailwind v4 @theme tokens + keyframes
 
 components/
 ├── layout/        Structural shell: SharedLayout, Header, Footer
-├── sections/      Page content blocks: FAQ, CustomerSupport, TrackingHero, CookieBanner
-├── tracking/      Tracking feature: input, results, modals
-├── scripts/       Third-party script injections: Analytics (GTM), Intercom, Clarity
+├── sections/      Page content blocks: FAQ, CustomerSupport, TrackingHero
+│   └── tracking/  Tracking feature: TrackingInput, TrackingResults, modals, result cards
+├── marketing-tools/  Third-party scripts: Analytics (GTM + GA4), Intercom, Clarity
 ├── icons/         SVG icon components
-└── ui/            Generic reusable primitives
+└── ui/            Generic reusable primitives: CookieBanner, FormSelect
 
 lib/
-├── api/           API call functions
-├── context/       TrackingContext — shared state for deep components
+├── api/           API call functions (tracking, edd, pod, notice)
+├── constants.ts   STATE_STEP_MAP, Links, Support, DateTime constants
+├── context/       TrackingContext — global state for the entire tracking feature
 ├── hooks/         useTracking, usePod
-├── i18n/          Translation JSON files
+├── i18n/          Translation JSON files (en / fr)
 ├── types/         Shared TypeScript types
-└── utils/         formatTime, validation, etc.
+└── utils/         formatTime, trackingStatus, validation, watermark
 
 docs/
-└── ARCHITECTURE.md   Explains SSG, i18n strategy, hydration decisions
+├── ARCHITECTURE.md      SSG, i18n strategy, hydration decisions, deployment pipeline
+├── audits/              TRACKING_LOGIC_AUDIT, MARKETING_TOOLS_AUDIT, SEO_AUDIT
+├── reference/           Shortcoder source HTML (PROD), shortcoder logic notes, static_page.html
+├── specs/               PRD, ERD, ERD_Revision
+└── worklog/             WORKLOG_2026-05-12.md (commits 1-31)
 ```
 
 ## Component tree
 
-Page load renders the following tree. Components without `"use client"` are Server Components (no interactivity, no hooks). The tracking feature subtree is entirely Client Components.
-
 ```
-app/(en)/tracking/page.tsx          ← Server Component
-└── TrackingHero                    ← locale prop (en | fr)
-    └── TrackingApp                 ← owns all tracking state via useTracking + usePod
-        │
-        ├── [TrackingProvider]      ← React Context, provides: eddMap · onViewPod · onDownloadPod · onOpenPiecesView
-        │
-        ├── TrackingInput           props: locale · value · onChange · onTrack · alert flags
-        │
-        ├── TrackingResults         props: validResults · invalidTnos · exportRows · openDetails · piecesView · resultsRef · onToggleDetail · onClosePiecesView
-        │   └── ParcelCard (×N)     props: result · index · isFirst · isOpen · collapsible · onToggle
-        │       └── ResultCard      props: result · index
-        │                           context: eddMap (looks up own tno) · onViewPod
-        │
-        ├── ZipModal                props: open · errorMessage · onVerify · onClose
-        └── PodModal                props: pod · validResults · onClose · onPrev · onNext · onDownloadCurrent · onDownloadAll
+app/(en)/tracking/page.tsx             ← Server Component
+└── SharedLayout
+    └── TrackingHero (locale prop)
+        └── TrackingProvider           ← React Context: owns ALL tracking state
+            ├── TrackingInput          reads: inputValue · loading · alert flags
+            │                          calls: setInputValue · handleTrack
+            │
+            ├── LoadingOverlay         reads: loading
+            │
+            ├── TrackingResults        reads: validResults · invalidTnos · openDetails · piecesView
+            │   └── ParcelCard (×N)    reads: result · isOpen · collapsible
+            │       └── ResultCard     reads context: eddMap · handleViewPod
+            │
+            ├── ZipModal               reads context: zipModal · handleZipVerify · closeZipModal
+            └── PodModal               reads context: pod · navigate · downloadCurrent · downloadAll
 ```
 
 ### Props vs Context
 
 | What | How | Why |
 |------|-----|-----|
-| `eddMap` | Context | ResultCard is 4 levels deep; intermediate components don't use it |
-| `onViewPod` | Context | Same — defined in TrackingApp, called in ResultCard button |
-| `onDownloadPod` | Context | Same |
-| `onOpenPiecesView` | Context | Defined in TrackingApp, called in ParcelCard; TrackingResults doesn't use it |
-| `openDetails` / `onToggleDetail` | Props (TrackingResults → ParcelCard) | TrackingResults transforms them: extracts per-card `isOpen` and creates `onToggle` closure — not pass-through |
-| `locale` | Prop (page → TrackingHero → TrackingApp → TrackingInput) | Manual JSON lookup avoids hydration mismatch with SSR; only TrackingInput needs it |
-| Everything else | Props (1 level) | Direct parent → child, no drilling |
+| `eddMap` | Context | ResultCard is 4 levels deep; intermediaries don't use it |
+| `handleViewPod` | Context | Defined in TrackingProvider, called in ResultCard |
+| `zipModal` / `pod` state + handlers | Context | Modals are siblings, not children, of the component that triggers them |
+| `locale` | Prop (page → TrackingHero → TrackingProvider) | Baked into static HTML at build time; avoids hydration mismatch |
+| `result`, `isOpen`, `collapsible` | Props (1 level) | Direct parent → child, no drilling |
 
 ## Adding a translation key
 
 1. Add the key to `lib/i18n/locales/en.json` and `fr.json`
-2. For **above-fold components** (Header, Footer, FAQ, TrackingInput): access via `t['yourKey']` — the locale prop is already threaded through
-3. For **interactive components** (ResultCard, modals, etc.): use `useTranslation()` as usual
+2. **Above-fold components** (Header, Footer, FAQ, TrackingInput): use `t['yourKey']` — translations are imported directly from JSON via the `locale` prop
+3. **Interactive components** (ResultCard, modals, etc.): use `useTranslation()` as usual
 
 ## Routes
 
 | URL | Page |
 |---|---|
-| `/` | English tracking page (redirects to `/tracking/` in production) |
+| `/` | English home (redirects to `/tracking/` in production) |
 | `/tracking/` | English tracking page |
 | `/fr/suivi/` | French tracking page |
