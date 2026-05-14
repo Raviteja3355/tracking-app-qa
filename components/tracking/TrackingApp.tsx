@@ -12,7 +12,7 @@ import TrackingResults from './results/TrackingResults'
 
 const MAX_TRACKING_NUMBERS = 25
 
-export default function TrackingApp() {
+export default function TrackingApp({ locale = 'en' }: { locale?: 'en' | 'fr' }) {
   const [showInvalidAlert, setShowInvalidAlert] = useState(false)
   const [showExceedAlert, setShowExceedAlert] = useState(false)
 
@@ -26,6 +26,7 @@ export default function TrackingApp() {
     zipModal,
     loading,
     inputValue,
+    apiError,
     resultsRef,
     setInputValue,
     track,
@@ -150,11 +151,13 @@ export default function TrackingApp() {
       {(loading || podLoading) && <Loader />}
 
       <TrackingInput
+        locale={locale}
         value={inputValue}
         onChange={setInputValue}
         onTrack={handleTrack}
         showInvalidAlert={showInvalidAlert}
         showExceedAlert={showExceedAlert}
+        showApiErrorAlert={apiError}
       />
 
       <TrackingResults
