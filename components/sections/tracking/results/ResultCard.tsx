@@ -5,6 +5,7 @@ import '@/lib/i18n'
 import { useTranslation } from 'react-i18next'
 import type { TrackingResult, EddData, SpathItem } from '@/lib/types'
 import { getProgressStep, showPodButton } from '@/lib/utils/trackingStatus'
+import { useTrackingContext } from '@/lib/context/TrackingContext'
 
 export { getProgressStep, showPodButton }
 
@@ -69,7 +70,7 @@ function ProgressTracker({ step }: { step: number }) {
       >
         {/* Connecting lines */}
         <div
-          className="absolute top-6.25 -translate-y-1/2 left-[12.5%] right-[12.5%] h-0.75 grid grid-cols-3 z-1"
+          className="absolute top-6.25 -translate-y-1/2 left-[calc(12.5%_+_22.5px)] right-[calc(12.5%_+_22.5px)] mob:left-[calc(12.5%_+_6px)] mob:right-[calc(12.5%_+_6px)] h-0.75 grid grid-cols-3 z-1"
         >
           {[0, 1, 2].map((i) => (
             <div key={i} className={`h-0.75 ${i < step ? 'bg-brand' : 'bg-uni-input-border'}`} />
@@ -150,12 +151,11 @@ function HelpStrip() {
 interface Props {
   result: TrackingResult
   index: number
-  eddData: EddData | undefined
-  onViewPod: (tno: string, trackingIndex: number) => void
-  onDownloadPod: (index: number) => void
 }
 
-export default function ResultCard({ result, index, eddData, onViewPod, onDownloadPod }: Props) {
+export default function ResultCard({ result, index }: Props) {
+  const { eddMap, handleViewPod: onViewPod } = useTrackingContext()
+  const eddData: EddData | undefined = eddMap[result.tno]
   const { t } = useTranslation()
   const [copied, setCopied] = useState(false)
 
@@ -165,17 +165,39 @@ export default function ResultCard({ result, index, eddData, onViewPod, onDownlo
   const step = getProgressStep(result)
   const hasPod = showPodButton(result)
 
-  // Top: show EDD only when edd_enabled=true; for delivered always show delivery date
-  const eddEnabled = eddData?.edd_enabled === true
+  // Top: show EDD only for US orders with edd_enabled=true; for delivered always show delivery date
+  const eddEnabled = result.country === 'US' && eddData?.edd_enabled === true
   const eddDate = eddEnabled ? eddData?.delivery_estimate?.estimated_delivery_date : undefined
   let topLabel: string | null = null
   let topValue: string | null = null   // big 32px date text
+  let topTime: string | null = null    // smaller time line below date
   let topMessage: string | null = null // normal-size message (e.g. "will be available")
   if (step === 3) {
-    const last = spath[spath.length - 1]
-    const { date } = parseDatetime(last)
+    // Find the actual delivered spath item (state 203/228 or URP "Delivered")
+    const deliveredItem = spath.find(
+      (item) =>
+        item.state === 203 ||
+        item.state === 228 ||
+        item.pathInfo === 'Delivered'
+    ) ?? spath[spath.length - 1]
+    const { date, time } = parseDatetime(deliveredItem)
     topLabel = t('labelDelivered')
-    topValue = date || '—'
+    if (date) {
+      const d = new Date(date + 'T00:00:00')
+      const dayName = d.toLocaleDateString('en-US', { weekday: 'long' })
+      const monthName = d.toLocaleDateString('en-US', { month: 'long' })
+      const dayNum = String(d.getDate()).padStart(2, '0')
+      topValue = `${dayName}, ${monthName} ${dayNum}`
+    } else {
+      topValue = '—'
+    }
+    if (time) {
+      const [hStr = '0', mStr = '00'] = time.split(':')
+      const h = parseInt(hStr, 10)
+      const period = h >= 12 ? 'P.M.' : 'A.M.'
+      const h12 = h % 12 || 12
+      topTime = `at ${h12}:${mStr} ${period}`
+    }
   } else if (eddEnabled) {
     topLabel = t('labelEstimatedDelivery')
     if (result.state === 190 || result.state === 1870) {
@@ -200,9 +222,14 @@ export default function ResultCard({ result, index, eddData, onViewPod, onDownlo
           <div className="col-span-full pb-4.5 mb-3.5 relative">
             <div className="text-[11px] text-uni-muted mb-2">{topLabel}</div>
             {topValue !== null ? (
-              <div className="text-[32px] mob:text-[22px] font-semibold tracking-[-0.3px] text-uni-black">
-                {topValue}
-              </div>
+              <>
+                <div className="text-[32px] mob:text-[22px] font-semibold tracking-[-0.3px] text-uni-black">
+                  {topValue}
+                </div>
+                {topTime && (
+                  <div className="text-[15px] text-uni-muted mt-1">{topTime}</div>
+                )}
+              </>
             ) : (
               <div className="text-[15px] text-uni-black leading-relaxed">
                 {topMessage}

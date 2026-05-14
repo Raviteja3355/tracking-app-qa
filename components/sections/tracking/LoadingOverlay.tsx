@@ -2,9 +2,12 @@
 
 import '@/lib/i18n'
 import { useTranslation } from 'react-i18next'
+import { useTrackingContext } from '@/lib/context/TrackingContext'
 
-export default function Loader() {
+export default function LoadingOverlay() {
   const { t } = useTranslation()
+  const { loading, podLoading } = useTrackingContext()
+  if (!loading && !podLoading) return null
   return (
     <div className="fixed inset-0 z-[1000] flex flex-col items-center justify-center bg-black/80">
       <div className="flex items-center">

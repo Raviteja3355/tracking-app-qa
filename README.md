@@ -54,12 +54,13 @@ components/
 ├── layout/        Structural shell: SharedLayout, Header, Footer
 ├── sections/      Page content blocks: FAQ, CustomerSupport, TrackingHero, CookieBanner
 ├── tracking/      Tracking feature: input, results, modals
-├── scripts/       Third-party script injections: Analytics (GTM), Intercom
+├── scripts/       Third-party script injections: Analytics (GTM), Intercom, Clarity
 ├── icons/         SVG icon components
 └── ui/            Generic reusable primitives
 
 lib/
 ├── api/           API call functions
+├── context/       TrackingContext — shared state for deep components
 ├── hooks/         useTracking, usePod
 ├── i18n/          Translation JSON files
 ├── types/         Shared TypeScript types
@@ -68,6 +69,40 @@ lib/
 docs/
 └── ARCHITECTURE.md   Explains SSG, i18n strategy, hydration decisions
 ```
+
+## Component tree
+
+Page load renders the following tree. Components without `"use client"` are Server Components (no interactivity, no hooks). The tracking feature subtree is entirely Client Components.
+
+```
+app/(en)/tracking/page.tsx          ← Server Component
+└── TrackingHero                    ← locale prop (en | fr)
+    └── TrackingApp                 ← owns all tracking state via useTracking + usePod
+        │
+        ├── [TrackingProvider]      ← React Context, provides: eddMap · onViewPod · onDownloadPod · onOpenPiecesView
+        │
+        ├── TrackingInput           props: locale · value · onChange · onTrack · alert flags
+        │
+        ├── TrackingResults         props: validResults · invalidTnos · exportRows · openDetails · piecesView · resultsRef · onToggleDetail · onClosePiecesView
+        │   └── ParcelCard (×N)     props: result · index · isFirst · isOpen · collapsible · onToggle
+        │       └── ResultCard      props: result · index
+        │                           context: eddMap (looks up own tno) · onViewPod
+        │
+        ├── ZipModal                props: open · errorMessage · onVerify · onClose
+        └── PodModal                props: pod · validResults · onClose · onPrev · onNext · onDownloadCurrent · onDownloadAll
+```
+
+### Props vs Context
+
+| What | How | Why |
+|------|-----|-----|
+| `eddMap` | Context | ResultCard is 4 levels deep; intermediate components don't use it |
+| `onViewPod` | Context | Same — defined in TrackingApp, called in ResultCard button |
+| `onDownloadPod` | Context | Same |
+| `onOpenPiecesView` | Context | Defined in TrackingApp, called in ParcelCard; TrackingResults doesn't use it |
+| `openDetails` / `onToggleDetail` | Props (TrackingResults → ParcelCard) | TrackingResults transforms them: extracts per-card `isOpen` and creates `onToggle` closure — not pass-through |
+| `locale` | Prop (page → TrackingHero → TrackingApp → TrackingInput) | Manual JSON lookup avoids hydration mismatch with SSR; only TrackingInput needs it |
+| Everything else | Props (1 level) | Direct parent → child, no drilling |
 
 ## Adding a translation key
 

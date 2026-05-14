@@ -1,13 +1,14 @@
 import en from "@/lib/i18n/locales/en.json";
 import fr from "@/lib/i18n/locales/fr.json";
+import type { Locale } from "@/lib/types";
+import { Links } from "@/lib/constants";
 
 const translations = { en, fr } as const;
-type Locale = keyof typeof translations;
 
 const FOOTER_LINKS = [
-  { key: "footerTerms", href: "https://www.uniuni.com/terms-and-conditions/" },
-  { key: "footerPrivacy", href: "https://www.uniuni.com/privacy-policy/" },
-  { key: "footerCookies", href: "https://www.uniuni.com/cookies-policy/" },
+  { key: "footerTerms", href: Links.terms },
+  { key: "footerPrivacy", href: Links.privacy },
+  { key: "footerCookies", href: Links.cookies },
 ];
 
 export default function Footer({ locale = "en" }: { locale?: Locale }) {

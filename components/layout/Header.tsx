@@ -5,6 +5,7 @@ import Logo from "@/components/icons/Logo";
 import ChevronDown from "@/components/icons/ChevronDown";
 import en from "@/lib/i18n/locales/en.json";
 import fr from "@/lib/i18n/locales/fr.json";
+import { Links } from "@/lib/constants";
 
 const translations = { en, fr } as const;
 
@@ -32,7 +33,7 @@ export default function Header({ locale = "en" }: { locale?: "en" | "fr" }) {
       {/* Header bar — z-50, always on top */}
       <nav className="sticky top-0 z-50 flex items-center justify-between bg-white px-14 py-6 mob:px-5 mob:py-4">
         <a
-          href="https://www.uniuni.com"
+          href={Links.home}
           aria-label="UniUni home"
           title="UniUni"
           className="inline-flex items-center"

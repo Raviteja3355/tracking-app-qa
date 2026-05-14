@@ -3,22 +3,19 @@
 import { useState, useEffect, useRef } from "react";
 import "@/lib/i18n";
 import { useTranslation } from "react-i18next";
-import type { TrackingResult, EddData, NoticeItem } from "@/lib/types";
+import type { TrackingResult, NoticeItem } from "@/lib/types";
 import { fetchWarehouseNotices } from "@/lib/api/notice";
 import { validateURPTrackingNo } from "@/lib/utils/validation";
+import { useTrackingContext } from "@/lib/context/TrackingContext";
 import ResultCard from "./ResultCard";
 
 interface Props {
   result: TrackingResult;
   index: number;
   isFirst: boolean;
-  eddData: EddData | undefined;
   isOpen: boolean;
   collapsible?: boolean;
   onToggle: () => void;
-  onViewPod: (tno: string, trackingIndex: number) => void;
-  onDownloadPod: (index: number) => void;
-  onOpenPiecesView: (index: number) => void;
 }
 
 function dotClass(result: TrackingResult): string {
@@ -111,14 +108,11 @@ export default function ParcelCard({
   result,
   index,
   isFirst,
-  eddData,
   isOpen,
   collapsible = true,
   onToggle,
-  onViewPod,
-  onDownloadPod,
-  onOpenPiecesView,
 }: Props) {
+  const { openPiecesView: onOpenPiecesView } = useTrackingContext();
   const [notices, setNotices] = useState<NoticeItem[]>([]);
   const cardRef = useRef<HTMLDivElement>(null);
   const prevOpenRef = useRef(isOpen);
@@ -227,9 +221,6 @@ export default function ParcelCard({
             <ResultCard
               result={result}
               index={index}
-              eddData={eddData}
-              onViewPod={onViewPod}
-              onDownloadPod={onDownloadPod}
             />
           </div>
         )}

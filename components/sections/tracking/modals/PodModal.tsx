@@ -1,69 +1,84 @@
-'use client'
+"use client";
 
-import { useEffect, useRef } from 'react'
-import '@/lib/i18n'
-import { useTranslation } from 'react-i18next'
-import type { PodModalState, TrackingResult } from '@/lib/types'
-import { resolveWatermarkData, drawWatermarkOnCanvas } from '@/lib/utils/watermark'
+import { useEffect, useRef } from "react";
+import "@/lib/i18n";
+import { useTranslation } from "react-i18next";
+import {
+  resolveWatermarkData,
+  drawWatermarkOnCanvas,
+} from "@/lib/utils/watermark";
+import { useTrackingContext } from "@/lib/context/TrackingContext";
 
-interface Props {
-  pod: PodModalState
-  validResults: TrackingResult[]
-  onClose: () => void
-  onPrev: () => void
-  onNext: () => void
-  onDownloadCurrent: () => void
-  onDownloadAll: () => void
-}
+export default function PodModal() {
+  const {
+    pod,
+    podError,
+    clearPodError,
+    validResults,
+    closePod: onClose,
+    navigate,
+    downloadCurrent: onDownloadCurrent,
+    downloadAll: onDownloadAll,
+  } = useTrackingContext();
 
-export default function PodModal({
-  pod,
-  validResults,
-  onClose,
-  onPrev,
-  onNext,
-  onDownloadCurrent,
-  onDownloadAll,
-}: Props) {
-  const { t } = useTranslation()
-  const canvasRef = useRef<HTMLCanvasElement>(null)
-  const imgRef = useRef<HTMLImageElement>(null)
+  const onPrev = () => navigate("prev");
+  const onNext = () => navigate("next");
+  const { t } = useTranslation();
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const imgRef = useRef<HTMLImageElement>(null);
 
-  const current = pod.images[pod.currentIndex]
-  const total = pod.images.length
+  const current = pod.images[pod.currentIndex];
+  const total = pod.images.length;
 
   const orderData =
     pod.fromSecondAPI && pod.orderData
-      ? validResults.find(
+      ? (validResults.find(
           (r) => r.tno === pod.orderNo || r.new_tno === pod.orderNo,
-        ) ?? pod.orderData
-      : null
+        ) ?? pod.orderData)
+      : null;
 
   useEffect(() => {
-    if (!current || !pod.open) return
-    const img = new Image()
-    if (!current.startsWith('data:') && !current.startsWith('blob:')) img.crossOrigin = 'anonymous'
-    img.src = current
+    if (!current || !pod.open) return;
+    const img = new Image();
+    if (!current.startsWith("data:") && !current.startsWith("blob:"))
+      img.crossOrigin = "anonymous";
+    img.src = current;
 
     img.onload = () => {
-      if (!canvasRef.current) return
-      const canvas = canvasRef.current
-      const ctx = canvas.getContext('2d')!
-      canvas.width = img.width
-      canvas.height = img.height
+      if (!canvasRef.current) return;
+      const canvas = canvasRef.current;
+      const ctx = canvas.getContext("2d")!;
+      canvas.width = img.width;
+      canvas.height = img.height;
 
       if (orderData) {
-        const spathItem = resolveWatermarkData(orderData)
+        const spathItem = resolveWatermarkData(orderData);
         if (spathItem) {
-          drawWatermarkOnCanvas(canvas, ctx, img, spathItem)
-          return
+          drawWatermarkOnCanvas(canvas, ctx, img, spathItem);
+          return;
         }
       }
-      ctx.drawImage(img, 0, 0)
-    }
-  }, [current, pod.open, orderData])
+      ctx.drawImage(img, 0, 0);
+    };
+  }, [current, pod.open, orderData]);
 
-  if (!pod.open) return null
+  if (podError) {
+    return (
+      <div className="fixed inset-0 z-9999 flex items-center justify-center bg-black/60">
+        <div className="mx-4 max-w-sm rounded-[20px] bg-white p-8 text-center shadow-glow">
+          <p className="text-[15px] text-uni-black">{t("podNotFound")}</p>
+          <button
+            onClick={clearPodError}
+            className="mt-5 cursor-pointer rounded-[10px] px-10 py-3.5 text-[16px] font-medium text-white transition-opacity hover:opacity-90 bg-brand-gradient"
+          >
+            {t("btnOkay")}
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  if (!pod.open) return null;
 
   return (
     <div className="fixed inset-0 z-[9999] overflow-hidden bg-[#101820d9]">
@@ -73,13 +88,13 @@ export default function PodModal({
             onClick={onDownloadAll}
             className="h-[46px] shrink-0 whitespace-nowrap rounded-[10px] border-2 border-white bg-transparent px-6 py-3 text-sm font-medium text-white hover:bg-white/10"
           >
-            {t('btnDownloadAll')}
+            {t("btnDownloadAll")}
           </button>
           <button
             onClick={onDownloadCurrent}
             className="h-[46px] shrink-0 whitespace-nowrap rounded-[10px] border-2 border-white bg-transparent px-6 py-3 text-sm font-medium text-white hover:bg-white/10"
           >
-            {t('btnDownloadImage')}
+            {t("btnDownloadImage")}
           </button>
           <button
             onClick={onClose}
@@ -130,5 +145,5 @@ export default function PodModal({
         </div>
       </div>
     </div>
-  )
+  );
 }
