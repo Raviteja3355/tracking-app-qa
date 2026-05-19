@@ -5,8 +5,18 @@ import "@/lib/i18n";
 import { useTranslation } from "react-i18next";
 import ParcelCard from "./ParcelCard";
 import ExportTable from "./ExportTable";
+import ErrorBoundary from "@/components/ui/ErrorBoundary";
 import { useTrackingContext } from "@/lib/context/TrackingContext";
 import { Links } from "@/lib/constants";
+
+function ParcelCardError({ tno }: { tno: string }) {
+  return (
+    <div className="max-w-202.5 mx-auto my-3 rounded-[10px] bg-white shadow-card px-9.5 py-5 flex items-center justify-between mob:px-5">
+      <span className="text-[16px] font-semibold text-uni-black">{tno}</span>
+      <span className="text-[13px] text-uni-red">Failed to load</span>
+    </div>
+  );
+}
 
 function MoreMenu({
   count,
@@ -265,14 +275,15 @@ export default function TrackingResults() {
 
         <div className="font-poppins">
           {piecesView.results.map((piece, i) => (
-            <ParcelCard
-              key={piece.tno}
-              result={piece}
-              index={piecesView.parentIndex}
-              isFirst={i === 0}
-              isOpen={!!openDetails[`piece-${piece.tno}`]}
-              onToggle={() => onToggleDetail(`piece-${piece.tno}`)}
-            />
+            <ErrorBoundary key={piece.tno} fallback={<ParcelCardError tno={piece.tno} />}>
+              <ParcelCard
+                result={piece}
+                index={piecesView.parentIndex}
+                isFirst={i === 0}
+                isOpen={!!openDetails[`piece-${piece.tno}`]}
+                onToggle={() => onToggleDetail(`piece-${piece.tno}`)}
+              />
+            </ErrorBoundary>
           ))}
         </div>
       </div>
@@ -299,15 +310,16 @@ export default function TrackingResults() {
 
       <div className="w-full font-poppins mb-25">
         {validResults.map((result, i) => (
-          <ParcelCard
-            key={result.tno}
-            result={result}
-            index={i}
-            isFirst={i === 0}
-            isOpen={!!openDetails[result.tno]}
-            collapsible={validResults.length > 1}
-            onToggle={() => onToggleDetail(result.tno)}
-          />
+          <ErrorBoundary key={result.tno} fallback={<ParcelCardError tno={result.tno} />}>
+            <ParcelCard
+              result={result}
+              index={i}
+              isFirst={i === 0}
+              isOpen={!!openDetails[result.tno]}
+              collapsible={validResults.length > 1}
+              onToggle={() => onToggleDetail(result.tno)}
+            />
+          </ErrorBoundary>
         ))}
       </div>
 

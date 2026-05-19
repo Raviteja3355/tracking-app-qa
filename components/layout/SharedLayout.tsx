@@ -7,6 +7,7 @@ import IntercomWidget from '@/components/marketing-tools/Intercom'
 import Analytics from '@/components/marketing-tools/Analytics'
 import Clarity from '@/components/marketing-tools/Clarity'
 import CookieBanner from '@/components/ui/CookieBanner'
+import ErrorBoundary from '@/components/ui/ErrorBoundary'
 import '@/app/globals.css'
 
 const poppins = Poppins({
@@ -28,8 +29,12 @@ export default function SharedLayout({
   return (
     <html lang={lang} className={poppins.variable}>
       <body className="min-h-screen bg-white font-poppins antialiased">
-        <Analytics />
-        <Clarity />
+        <ErrorBoundary>
+          <Analytics />
+        </ErrorBoundary>
+        <ErrorBoundary>
+          <Clarity />
+        </ErrorBoundary>
         <Script
           src="https://cdn.jsdelivr.net/gh/linways/table-to-excel@v1.0.4/dist/tableToExcel.js"
           strategy="lazyOnload"
@@ -38,8 +43,12 @@ export default function SharedLayout({
           <Header locale={locale} />
           {children}
           <Footer locale={locale} />
-          <IntercomWidget />
-          <CookieBanner />
+          <ErrorBoundary>
+            <IntercomWidget />
+          </ErrorBoundary>
+          <ErrorBoundary>
+            <CookieBanner />
+          </ErrorBoundary>
         </Providers>
       </body>
     </html>
