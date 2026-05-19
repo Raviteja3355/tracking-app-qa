@@ -26,17 +26,25 @@ function MoreMenu({
   }
 
   return (
-    <div className="relative">
+    <div
+      className="relative"
+      onMouseEnter={() => setOpen(true)}
+      onMouseLeave={() => setOpen(false)}
+    >
       <button
         onClick={() => setOpen((v) => !v)}
         style={{ boxShadow: "4px 4px 10px 1px #D1E8E8" }}
-        className="flex h-[25px] w-[75px] cursor-pointer items-center justify-center gap-[5px] rounded-[5px] border-none bg-[#4B4B4B] text-[12px] font-medium text-white"
+        className={`flex h-6.25 cursor-pointer items-center justify-between px-5 gap-1.25 rounded-[5px] text-[12px] font-medium transition-colors duration-150 ${
+          open
+            ? "w-38.25 border-transparent bg-uni-gray text-white"
+            : "w-37.75 border border-[#C6C6C6] bg-white text-uni-gray"
+        }`}
       >
         {t("menuMore")}
         <svg width="8" height="5" viewBox="0 0 8 5" fill="none">
           <path
             d="M1 1L4 4L7 1"
-            stroke="white"
+            stroke={open ? "white" : "#4B4B4B"}
             strokeWidth="1.3"
             strokeLinecap="round"
             strokeLinejoin="round"
@@ -115,20 +123,14 @@ function InvalidSection({ tnos }: { tnos: string[] }) {
           </div>
           <div className="hidden text-[14px] text-black desk:block">
             {t("alertNoInfoDesktop")}{" "}
-            <a
-              href={Links.support}
-              className="underline text-black"
-            >
+            <a href={Links.support} className="underline text-black">
               {t("linkCustomerService")}
             </a>{" "}
             {t("alertNoInfoSuffix")}
           </div>
           <div className="block text-[14px] text-black desk:hidden">
             {t("alertNoInfoMobile")}{" "}
-            <a
-              href={Links.support}
-              className="underline text-black"
-            >
+            <a href={Links.support} className="underline text-black">
               {t("linkCustomerService")}
             </a>
             .
@@ -143,11 +145,7 @@ function InvalidSection({ tnos }: { tnos: string[] }) {
         </div>
       </div>
       <div className="ml-4 hidden items-center desk:flex">
-        <img
-          src={Links.invalidSearchImg}
-          alt=""
-          className="w-30"
-        />
+        <img src={Links.invalidSearchImg} alt="" className="w-30" />
       </div>
     </div>
   );
@@ -282,8 +280,8 @@ export default function TrackingResults() {
   }
 
   return (
-    <div ref={resultsRef} className="w-full pb-25 font-poppins">
-      {validResults.length > 0 && exportRows.length > 0 && (
+    <div ref={resultsRef} className="w-full pb-25 font-poppins mt-8">
+      {validResults.length > 1 && exportRows.length > 1 && (
         <div className="mx-auto mt-8 flex max-w-202.5 items-center justify-between">
           <span className="text-[12px] text-black">
             <span className="font-semibold">

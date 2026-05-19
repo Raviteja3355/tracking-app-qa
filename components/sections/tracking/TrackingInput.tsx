@@ -13,7 +13,7 @@ export default function TrackingInput() {
   const [expanded, setExpanded] = useState(false)
 
   function handleKeyDown(e: React.KeyboardEvent) {
-    if (e.key === 'Enter') {
+    if (e.key === 'Enter' && !e.shiftKey && !e.metaKey) {
       e.preventDefault()
       handleTrack()
     }
