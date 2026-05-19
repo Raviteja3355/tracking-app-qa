@@ -7,11 +7,20 @@
 |  |  |
 | --- | --- |
 | **Product** | UniUni Tracking Portal |
-| **Version** | 1.0 |
-| **Date** | 2026-05-11 |
-| **Status** | Draft |
+| **Version** | 1.3 |
+| **Date** | 2026-05-19 |
+| **Status** | approved |
 | **Author** | Peter Pan |
 | **Stakeholders** | Marketing, Engineering, Infrastructure |
+
+### Revision History
+
+| Version | Date | Author | Changes |
+| --- | --- | --- | --- |
+| 1.0 | 2026-05-11 | Peter Pan | Initial release |
+| 1.1 | 2026-05-18 | Peter Pan | Added Section 10: Tracking Status Milestone Mapping; updated Section 3.1 to include bulk Excel export; updated F-09 to clarify bulk download of tracking results; removed new event tracking |
+| 1.2 | 2026-05-19 | Peter Pan | Removed Section 9: Open Questions; renumbered Tracking Status Milestone Mapping to Section 9 |
+| 1.3 | 2026-05-19 | Peter Pan | Updated Section 9: revised M4 display rules; 220, 231, 232 display as Out for Delivery; 212 displays as Incomplete Address; 213 displays as Undeliverable; M4 hidden entirely when not triggered; updated M5 Exception state codes |
 
 ### 1. Background & Problem Statement
 
@@ -165,3 +174,77 @@ The following is the current configuration on http://uniuni.com/tracking/ and se
 * GTM, GA4, Facebook Pixel, Clarity, and HubSpot configurations will be validated by the Marketing team after frontend delivery.
 * The French-language version (/fr/suivi/) is in scope and must be available at launch.
 * Intercom account configuration (App ID: l054jq87) requires no changes; only the embed script needs to be included.
+
+### 9. Tracking Status — Milestone Mapping
+
+#### 9.1 Milestone Definition
+
+The new Tracking Portal displays shipment progress across 5 milestones. Only milestones that have been reached are shown with a label. Milestones not yet reached are displayed as a dot only, with no description.
+
+| Milestone | Label |
+| --- | --- |
+| M1 | Label Created |
+| M2 | Facility Received |
+| M3 | In Transit |
+| M4 | Out for Delivery (conditional — see Section 9.4) |
+| M5 | Final State (dynamic — see Section 9.3) |
+
+#### 9.2 Status Code to Milestone Mapping
+
+| State Code | Description | Category | Milestone |
+| --- | --- | --- | --- |
+| 190 | Label Created | — | M1 · Label Created |
+| 1870 | Parcel pickup failed at the merchant's location | Pickup | M1 · Label Created |
+| 199 | Parcel Arrived at UniUni Warehouse | — | M2 · Facility Received (first occurrence only; subsequent occurrences map to M3 · In Transit) |
+| 1910 | Package bulk received at warehouse | Linehaul | M3 · In Transit |
+| 4010 | Package loaded for transfer | Linehaul | M3 · In Transit |
+| 195 | Parcel in transit to local UniUni delivery facility | Linehaul | M3 · In Transit |
+| 255 | UniUni Interfacility transited | Linehaul | M3 · In Transit |
+| 218 | Scanned parcel processing delay | Last-mile | M3 · In Transit |
+| 219 | The parcel is sent to a wrong warehouse for dispatch | Last-mile | M3 · In Transit |
+| 200 | Parcel Ready for Delivery Driver Pickup | Last-mile | M3 · In Transit |
+| 202 | Out for delivery | Last-mile | M4 · Out for Delivery |
+| 220 | Attempting second delivery | Last-mile | M4 · Out for Delivery |
+| 231 | Delivery rescheduled for 2nd delivery attempt | Last-mile | M4 · Out for Delivery |
+| 232 | Delivery rescheduled for 3rd delivery attempt | Last-mile | M4 · Out for Delivery |
+| 203 | Your parcel has been delivered | Last-mile | M5 · Delivered |
+| 216 | Parcel has been picked up by customer at local UniUni facility | Last-mile | M5 · Delivered |
+| 228 | Redelivered | Last-mile | M5 · Delivered |
+| 204 | Parcel is being transferred to a third-party carrier | Last-mile | — (not displayed) |
+| 217 | Package transferred to final mile delivery partner | Last-mile | M5 · Transferred |
+| 206 | Unable to deliver, invalid address | Last-mile | M5 · Exception |
+| 207 | Parcel lost | Last-mile | M5 · Exception |
+| 209 | Exception | Last-mile | M5 · Exception |
+| 211 | The delivery attempt failed, will be returned to the UniUni warehouse | Last-mile | — (not displayed) |
+| 212 | Unable to scan at sorting facility, incomplete address | Last-mile | M4 · Incomplete Address |
+| 213 | Undeliverable | Last-mile | M4 · Undeliverable |
+| 215 | Parcel returned to sender | Last-mile | M5 · Exception |
+| 222 | Delivery refused by customer | Last-mile | M5 · Exception |
+| 229 | Dropped off at service point, available for pickup next day | Last-mile | M5 · Exception |
+| 230 | The parcel is returned to sender | Return | M5 · Returned to Sender |
+| 233 | Package return process started | Return | — (not displayed) |
+| 234 | The parcel is in transit back to the sender | Return | — (not displayed) |
+| 235 | Failed to return package | Return | M5 · Exception |
+
+#### 9.3 Final State (M5) Sub-types
+
+M5 has multiple possible outcomes. The milestone label displayed dynamically reflects the actual result:
+
+| M5 Sub-type | Displayed Label | State Codes |
+| --- | --- | --- |
+| Delivered | Delivered | 203, 216, 228 |
+| Transferred | Transferred | 217 |
+| Exception | Exception | 206, 207, 209, 215, 222, 229, 235 |
+| Returned | Returned to Sender | 230 |
+
+#### 9.4 Display Rules
+
+* Only milestones that have been reached are shown with a label and description.
+* Milestones not yet reached are rendered as a dot only — no label, no description.
+* The active milestone (current state) is highlighted.
+* For state code 199: the first occurrence maps to M2 · Facility Received; any subsequent occurrence maps to M3 · In Transit.
+* M4 is conditional. If no M4-triggering state code is ever present in the shipment's tracking history, M4 is hidden entirely — no dot, no label. In this case the milestone bar renders as M1 → M2 → M3 → M5.
+* State codes 211, 233, and 234 are not displayed to the end user.
+* M4 state codes 202, 220, 231, and 232 all display as Out for Delivery. State code 212 displays as Incomplete Address. State code 213 displays as Undeliverable.
+* M5 label dynamically reflects the sub-type: Delivered / Transferred / Exception / Returned to Sender.
+* If any M3-triggering state code is present in the shipment's tracking history but no M2-triggering state code (199) exists, M2 · Facility Received is automatically shown as reached.

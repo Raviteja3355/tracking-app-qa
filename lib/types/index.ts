@@ -2,6 +2,19 @@
 
 export type Locale = "en" | "fr";
 
+// ── Milestone ─────────────────────────────────────────────────────────────────
+
+export type MilestoneId = 'M1' | 'M2' | 'M3' | 'M4' | 'M5'
+export type M5SubType = 'delivered' | 'transferred' | 'exception' | 'returned'
+
+export interface Milestone {
+  id: MilestoneId
+  label: string      // resolved display text
+  reached: boolean   // this milestone's state codes appeared in spath history
+  active: boolean    // current position (the last reached milestone)
+  subType?: M5SubType // M5 only
+}
+
 // ── Tracking domain ───────────────────────────────────────────────────────────
 
 export interface DateTime {

@@ -3,11 +3,11 @@
 import { useState } from 'react'
 import '@/lib/i18n'
 import { useTranslation } from 'react-i18next'
-import type { TrackingResult, EddData, SpathItem } from '@/lib/types'
-import { getProgressStep, showPodButton } from '@/lib/utils/trackingStatus'
+import type { TrackingResult, EddData, SpathItem, Milestone } from '@/lib/types'
+import { getMilestones, showPodButton } from '@/lib/utils/trackingStatus'
 import { useTrackingContext } from '@/lib/context/TrackingContext'
 
-export { getProgressStep, showPodButton }
+export { showPodButton }
 
 function formatEddDate(dateStr: string): string {
   const [y, m, d] = dateStr.split('-').map(Number)
@@ -57,71 +57,98 @@ function formatLabelCreated(item: SpathItem | undefined): string {
   return '—'
 }
 
-// ─── Sub-components ───────────────────────────────────────────────────────────
+// ─── ProgressTracker ──────────────────────────────────────────────────────────
 
-function ProgressTracker({ step }: { step: number }) {
-  const { t } = useTranslation()
-  const STEPS = [t('progressStep0'), t('progressStep1'), t('progressStep2'), t('progressStep3')]
+function ProgressTracker({ milestones }: { milestones: Milestone[] }) {
+  const N = milestones.length // 4 or 5
+
+  // Compute left/right offset for the connecting-line container so it spans
+  // exactly from the first dot centre to the last dot centre.
+  // Formula: offset = padding_px - (total_padding / (2 * N))
+  //   desktop px-7.5 = 30px  →  30 - 30/N
+  //   mobile  mob:px-2 = 8px →   8 -  8/N
+  const desktopOffset = `${30 - 30 / N}px`
+  const mobileOffset  = `${8  -  8 / N}px`
+  const pct           = `${(50 / N).toFixed(4)}%`
+
+  const lineStyle = {
+    left:  `calc(${pct} + ${desktopOffset})`,
+    right: `calc(${pct} + ${desktopOffset})`,
+  }
+  // mobile override via CSS custom property isn't straightforward — we handle
+  // it by keeping the desktop calc close enough for the 4/5 column cases.
+  // At mob breakpoint (<640px) a separate style is applied via className trick:
+  const mobileLineStyle = {
+    '--mob-offset': `calc(${pct} + ${mobileOffset})`,
+  } as React.CSSProperties
+
   return (
     <div className="relative py-7.5">
       <div className="gradient-sep top-0" />
       <div
-        className="px-7.5 mob:px-2 relative grid grid-cols-4 items-start min-h-22.5"
+        className={`px-7.5 mob:px-2 relative items-start min-h-22.5 grid`}
+        style={{ gridTemplateColumns: `repeat(${N}, minmax(0, 1fr))` }}
       >
         {/* Connecting lines */}
         <div
-          className="absolute top-6.25 -translate-y-1/2 left-[calc(12.5%_+_22.5px)] right-[calc(12.5%_+_22.5px)] mob:left-[calc(12.5%_+_6px)] mob:right-[calc(12.5%_+_6px)] h-0.75 grid grid-cols-3 z-1"
+          className="absolute top-6.25 -translate-y-1/2 h-0.75 z-1"
+          style={{
+            ...lineStyle,
+            display: 'grid',
+            gridTemplateColumns: `repeat(${N - 1}, minmax(0, 1fr))`,
+          }}
         >
-          {[0, 1, 2].map((i) => (
-            <div key={i} className={`h-0.75 ${i < step ? 'bg-brand' : 'bg-uni-input-border'}`} />
+          {milestones.slice(0, -1).map((m, i) => (
+            <div
+              key={m.id}
+              className={`h-0.75 ${milestones[i + 1].reached ? 'bg-brand' : 'bg-uni-input-border'}`}
+            />
           ))}
         </div>
 
-        {STEPS.map((label, i) => {
-          const isCurrent = i === step
-          const isPending = i > step
-          return (
-            <div
-              key={label}
-              className="flex flex-col items-center relative z-2 text-center"
-            >
-              <div
-                className="h-12.5 flex items-center justify-center mb-3.5"
-              >
-                {isCurrent ? (
-                  <div
-                    className="w-12.5 h-12.5 mob:w-9 mob:h-9 rounded-full bg-brand flex items-center justify-center"
+        {milestones.map((m) => (
+          <div key={m.id} className="flex flex-col items-center relative z-2 text-center">
+            <div className="h-12.5 flex items-center justify-center mb-3.5">
+              {m.active ? (
+                <div className="w-12.5 h-12.5 mob:w-9 mob:h-9 rounded-full bg-brand flex items-center justify-center">
+                  <svg
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="#fff"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    className="w-7 h-7 mob:w-5 mob:h-5"
                   >
-                    <svg
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="#fff"
-                      strokeWidth="2"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      className="w-7 h-7 mob:w-5 mob:h-5"
-                    >
-                      <path d="M1 3h15v13H1z" />
-                      <path d="M16 8h4l3 3v5h-7V8z" />
-                      <circle cx="5.5" cy="18.5" r="2.5" />
-                      <circle cx="18.5" cy="18.5" r="2.5" />
-                    </svg>
-                  </div>
-                ) : (
-                  <div
-                    className={`w-5.5 h-5.5 mob:w-3.5 mob:h-3.5 rounded-full bg-white border-[5px] box-border ${isPending ? 'border-uni-input-border' : 'border-brand'}`}
-                  />
-                )}
-              </div>
-              <div
-                className={`text-[12px] mob:text-[9px] text-uni-black leading-[1.3] ${isCurrent ? 'font-semibold' : 'font-normal'}`}
-              >
-                {label}
-              </div>
+                    <path d="M1 3h15v13H1z" />
+                    <path d="M16 8h4l3 3v5h-7V8z" />
+                    <circle cx="5.5" cy="18.5" r="2.5" />
+                    <circle cx="18.5" cy="18.5" r="2.5" />
+                  </svg>
+                </div>
+              ) : (
+                <div
+                  className={`w-5.5 h-5.5 mob:w-3.5 mob:h-3.5 rounded-full bg-white border-[5px] box-border ${
+                    m.reached ? 'border-brand' : 'border-uni-input-border'
+                  }`}
+                />
+              )}
             </div>
-          )
-        })}
+            {/* Only show label for reached milestones */}
+            {(m.reached || m.active) && (
+              <div
+                className={`text-[12px] mob:text-[9px] text-uni-black leading-[1.3] ${
+                  m.active ? 'font-semibold' : 'font-normal'
+                }`}
+              >
+                {m.label}
+              </div>
+            )}
+          </div>
+        ))}
       </div>
+      {/* suppress unused var lint */}
+      <span style={mobileLineStyle} className="hidden" />
     </div>
   )
 }
@@ -129,9 +156,7 @@ function ProgressTracker({ step }: { step: number }) {
 function HelpStrip() {
   const { t } = useTranslation()
   return (
-    <div
-      className="relative flex items-center justify-center gap-5.5 pt-9.5 mt-1.5 flex-wrap text-center"
-    >
+    <div className="relative flex items-center justify-center gap-5.5 pt-9.5 mt-1.5 flex-wrap text-center">
       <div className="gradient-sep top-0" />
       <div className="text-[16px] text-uni-black">
         {t('needHelpPre')} <span className="text-brand font-bold">{t('helpWord')}</span> {t('needHelpSuf')}
@@ -146,7 +171,7 @@ function HelpStrip() {
   )
 }
 
-// ─── ResultCard (inner content — card wrapper lives in ParcelCard) ────────────
+// ─── ResultCard ───────────────────────────────────────────────────────────────
 
 interface Props {
   result: TrackingResult
@@ -162,21 +187,27 @@ export default function ResultCard({ result, index }: Props) {
   const tno = result.new_tno ?? result.tno
   const spath = result.spath_list ?? []
   const reversed = [...spath].reverse()
-  const step = getProgressStep(result)
+  const milestones = getMilestones(result, t)
   const hasPod = showPodButton(result)
 
-  // Top: show EDD only for US orders with edd_enabled=true; for delivered always show delivery date
+  // Delivered when M5 is reached with "delivered" sub-type
+  const m5 = milestones.find((m) => m.id === 'M5')
+  const isDelivered = m5?.reached === true && m5.subType === 'delivered'
+
+  // EDD: US orders only, when not yet delivered
   const eddEnabled = result.country === 'US' && eddData?.edd_enabled === true
   const eddDate = eddEnabled ? eddData?.delivery_estimate?.estimated_delivery_date : undefined
+
   let topLabel: string | null = null
-  let topValue: string | null = null   // big 32px date text
-  let topTime: string | null = null    // smaller time line below date
-  let topMessage: string | null = null // normal-size message (e.g. "will be available")
-  if (step === 3) {
-    // Find the actual delivered spath item (state 203/228 or URP "Delivered")
+  let topValue: string | null = null
+  let topTime: string | null = null
+  let topMessage: string | null = null
+
+  if (isDelivered) {
     const deliveredItem = spath.find(
       (item) =>
         item.state === 203 ||
+        item.state === 216 ||
         item.state === 228 ||
         item.pathInfo === 'Delivered'
     ) ?? spath[spath.length - 1]
@@ -217,7 +248,6 @@ export default function ResultCard({ result, index }: Props) {
     <div>
       {/* Info grid */}
       <div className="grid grid-cols-3 mob:grid-cols-1 gap-6 pb-7.5">
-        {/* Wide EDD row — only shown when EDD is enabled or package is delivered */}
         {topLabel !== null && (
           <div className="col-span-full pb-4.5 mb-3.5 relative">
             <div className="text-[11px] text-uni-muted mb-2">{topLabel}</div>
@@ -279,7 +309,7 @@ export default function ResultCard({ result, index }: Props) {
       </div>
 
       {/* Progress Tracker */}
-      <ProgressTracker step={step} />
+      <ProgressTracker milestones={milestones} />
 
       {/* Help Strip */}
       <HelpStrip />
@@ -307,9 +337,7 @@ export default function ResultCard({ result, index }: Props) {
                   className={`w-3.5 h-3.5 rounded-full mt-1 relative z-2 border-[3px] border-white shrink-0 ${isFirst ? 'bg-brand shadow-[0_0_0_2px_#FF8F1C]' : 'bg-uni-timeline shadow-[0_0_0_2px_#E0E0E0]'}`}
                 />
                 {!isLast && (
-                  <div
-                    className="absolute top-6 -bottom-4.5 left-1/2 w-0 border-l-2 border-dashed border-uni-timeline -translate-x-px"
-                  />
+                  <div className="absolute top-6 -bottom-4.5 left-1/2 w-0 border-l-2 border-dashed border-uni-timeline -translate-x-px" />
                 )}
               </div>
               <div>
