@@ -24,6 +24,65 @@
  * which gates all watermark logic in this hook and in PodModal.tsx.
  * PodModalState 中的 `fromSecondAPI` 标记当前会话是否为 URP 包裹，
  * 控制本 hook 和 PodModal.tsx 中所有水印相关逻辑的开关。
+ *
+ * ── Architecture notes ────────────────────────────────────────────────────────
+ * 架构说明
+ *
+ * Pain points of this approach:
+ * 这种方式的痛点：
+ *
+ *   a. Hidden coupling to useTracking via `validResults`.
+ *      This hook receives `validResults` as a parameter solely so `openPod` can
+ *      read `validResults[trackingIndex]` to get GPS spath data for watermarking.
+ *      This means usePod cannot be used independently — it is silently coupled
+ *      to whatever array useTracking produces. If validResults is stale or
+ *      ordered differently, the wrong TrackingResult is passed to the watermark
+ *      utility.
+ *      通过 `validResults` 参数与 useTracking 形成隐式耦合。
+ *      此 hook 接收 `validResults` 仅仅是为了让 `openPod` 能通过索引取得
+ *      用于水印的 spath GPS 数据。这意味着 usePod 无法独立使用——它悄悄依赖
+ *      useTracking 产出的数组。若 validResults 过期或顺序不同，
+ *      传入水印工具的 TrackingResult 就会出错。
+ *
+ *   b. Download orchestration belongs in a utility, not a hook.
+ *      `downloadCurrent` and `downloadAll` contain the full watermark-or-not
+ *      branching logic. This logic does not depend on any React state beyond
+ *      `pod` — it is a pure async operation that would be easier to test and
+ *      maintain as a standalone function in utils/podDownload.ts.
+ *      下载编排逻辑应属于工具函数，而非 hook。
+ *      `downloadCurrent` 和 `downloadAll` 包含完整的"加水印/不加水印"分支逻辑。
+ *      这些逻辑除 `pod` 外不依赖任何 React 状态，是纯异步操作，
+ *      拆成 utils/podDownload.ts 中的独立函数会更易测试和维护。
+ *
+ *   c. `alert()` calls inside a hook.
+ *      Calling `alert()` in download error paths couples the hook to the browser
+ *      environment and makes the error handling strategy impossible to customise
+ *      from the component layer.
+ *      hook 内部直接调用 `alert()`。
+ *      在下载错误路径中调用 `alert()` 将 hook 与浏览器环境绑定，
+ *      组件层无法自定义错误处理策略。
+ *
+ * Why this approach was chosen anyway:
+ * 为何仍然选择这种方式：
+ *
+ *   - POD is a self-contained modal flow. No other component needs to share POD
+ *     state, so collocating state and behaviour in one hook is a net simplification
+ *     versus lifting state up through the component tree.
+ *     POD 是自包含的弹窗流程，没有其他组件需要共享 POD 状态。
+ *     将状态和行为收在一个 hook 中，比沿组件树向上提升状态更简洁。
+ *
+ *   - Watermark logic (createWatermarkedBlob, resolveWatermarkData) is already
+ *     separated into utils/watermark.ts. The hook is a thin orchestration layer
+ *     on top; the algorithmic complexity lives outside.
+ *     水印逻辑（createWatermarkedBlob、resolveWatermarkData）已分离到
+ *     utils/watermark.ts。此 hook 只是薄薄的编排层，算法复杂度在外部。
+ *
+ *   - The `validResults` coupling is a known smell. The correct fix is to pass
+ *     the specific TrackingResult directly to openPod instead of an index into
+ *     a shared array. That refactor is safe to do without any architecture change.
+ *     `validResults` 耦合是已知的代码异味。正确的修复是直接将
+ *     TrackingResult 传给 openPod，而非传入共享数组的索引。
+ *     这个重构不需要架构改动，随时可以安全进行。
  */
 
 import { useState, useCallback } from 'react'
