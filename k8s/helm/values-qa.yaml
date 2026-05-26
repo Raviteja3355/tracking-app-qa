@@ -7,6 +7,7 @@
 
 namespace:
   name: tracking-app-qa
+  create: false
 
 image:
   repository: 232317180286.dkr.ecr.us-west-2.amazonaws.com/uniuni-qa-tracking-app
