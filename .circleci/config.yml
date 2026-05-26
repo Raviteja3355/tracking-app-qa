@@ -1,0 +1,386 @@
+version: 2.1
+
+parameters:
+  node_image:
+    type: string
+    default: "cimg/node:20.19"
+  machine_image:
+    type: string
+    default: "ubuntu-2204:current"
+  app_dir:
+    type: string
+    default: "."
+  image_name:
+    type: string
+    default: "tracking-app"
+  kubectl_version:
+    type: string
+    default: "1.31.0"
+  helm_release_name:
+    type: string
+    default: "tracking-app"
+  helm_chart_dir:
+    type: string
+    default: "k8s/helm"
+  qa_namespace:
+    type: string
+    default: "tracking-app-qa"
+  prod_namespace:
+    type: string
+    default: "tracking-app-prod"
+
+executors:
+  machine-exec:
+    machine:
+      image: << pipeline.parameters.machine_image >>
+    resource_class: large
+
+commands:
+  configure-aws:
+    parameters:
+      access_key:
+        type: env_var_name
+      secret_key:
+        type: env_var_name
+      region:
+        type: env_var_name
+    steps:
+      - run:
+          name: Configure AWS CLI
+          command: |
+            aws configure set aws_access_key_id "${<< parameters.access_key >>}"
+            aws configure set aws_secret_access_key "${<< parameters.secret_key >>}"
+            aws configure set region "${<< parameters.region >>}"
+
+  install-trivy:
+    steps:
+      - run:
+          name: Install Trivy
+          command: |
+            curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh \
+            | sudo sh -s -- -b /usr/local/bin
+            trivy --version
+
+  install-kubectl:
+    steps:
+      - run:
+          name: Install kubectl
+          command: |
+            curl -LO https://dl.k8s.io/release/v<< pipeline.parameters.kubectl_version >>/bin/linux/amd64/kubectl
+            chmod +x kubectl
+            sudo mv kubectl /usr/local/bin/
+
+  install-helm:
+    steps:
+      - run:
+          name: Install Helm
+          command: |
+            curl https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
+            helm version
+
+  update-kubeconfig:
+    parameters:
+      cluster_name:
+        type: env_var_name
+      region:
+        type: env_var_name
+    steps:
+      - run:
+          name: Update kubeconfig
+          command: |
+            aws eks update-kubeconfig \
+              --name "${<< parameters.cluster_name >>}" \
+              --region "${<< parameters.region >>}"
+
+  create-env-file:
+    steps:
+      - run:
+          name: Create .env.local
+          command: |
+            cat > << pipeline.parameters.app_dir >>/.env.local \<<EOF
+            NEXT_PUBLIC_DELIVERY_API=${NEXT_PUBLIC_DELIVERY_API}
+            NEXT_PUBLIC_DISPATCH_API=${NEXT_PUBLIC_DISPATCH_API}
+            NEXT_PUBLIC_DRIVER_APP_CA=${NEXT_PUBLIC_DRIVER_APP_CA}
+            NEXT_PUBLIC_DRIVER_APP_US=${NEXT_PUBLIC_DRIVER_APP_US}
+            NEXT_PUBLIC_TRACKING_API_KEY=${NEXT_PUBLIC_TRACKING_API_KEY}
+            NEXT_PUBLIC_EDD_API_URL=${NEXT_PUBLIC_EDD_API_URL}
+            NEXT_PUBLIC_EDD_API_KEY=${NEXT_PUBLIC_EDD_API_KEY}
+            EOF
+
+jobs:
+  # QA: build with QA env vars baked in (requires qa-context)
+  build-qa:
+    executor: machine-exec
+    steps:
+      - checkout
+      - create-env-file
+      - run:
+          name: Set Image Tag
+          command: echo "export IMAGE_TAG=${CIRCLE_SHA1:0:7}" >> $BASH_ENV
+      - run:
+          name: Build Docker Image (QA)
+          command: |
+            source $BASH_ENV
+            docker build \
+              -t << pipeline.parameters.image_name >>:${IMAGE_TAG} \
+              << pipeline.parameters.app_dir >>
+      - run:
+          name: Save Docker Image
+          command: |
+            source $BASH_ENV
+            docker save << pipeline.parameters.image_name >>:${IMAGE_TAG} \
+              | gzip > image.tar.gz
+            echo ${IMAGE_TAG} > image-tag.txt
+      - persist_to_workspace:
+          root: .
+          paths:
+            - image.tar.gz
+            - image-tag.txt
+
+  # PROD: build with PROD env vars baked in (requires prod-context)
+  build-prod:
+    executor: machine-exec
+    steps:
+      - checkout
+      - create-env-file
+      - run:
+          name: Set Image Tag
+          command: echo "export IMAGE_TAG=${CIRCLE_SHA1:0:7}" >> $BASH_ENV
+      - run:
+          name: Build Docker Image (PROD)
+          command: |
+            source $BASH_ENV
+            docker build \
+              -t << pipeline.parameters.image_name >>:${IMAGE_TAG} \
+              << pipeline.parameters.app_dir >>
+      - run:
+          name: Save Docker Image
+          command: |
+            source $BASH_ENV
+            docker save << pipeline.parameters.image_name >>:${IMAGE_TAG} \
+              | gzip > image-prod.tar.gz
+            echo ${IMAGE_TAG} > image-tag.txt
+      - persist_to_workspace:
+          root: .
+          paths:
+            - image-prod.tar.gz
+            - image-tag.txt
+
+  scan-image:
+    executor: machine-exec
+    parameters:
+      artifact:
+        type: string
+        default: "image.tar.gz"
+    steps:
+      - attach_workspace:
+          at: .
+      - install-trivy
+      - run:
+          name: Load Image
+          command: docker load < << parameters.artifact >>
+      - run:
+          name: Scan Image
+          command: |
+            IMAGE_TAG=$(cat image-tag.txt)
+            trivy image \
+              --severity HIGH,CRITICAL \
+              --exit-code 1 \
+              << pipeline.parameters.image_name >>:${IMAGE_TAG}
+
+  push-ecr:
+    executor: machine-exec
+    parameters:
+      aws_access_key:
+        type: env_var_name
+      aws_secret_key:
+        type: env_var_name
+      aws_region:
+        type: env_var_name
+      ecr_registry:
+        type: env_var_name
+      ecr_repo:
+        type: env_var_name
+      artifact:
+        type: string
+        default: "image.tar.gz"
+    steps:
+      - attach_workspace:
+          at: .
+      - configure-aws:
+          access_key: << parameters.aws_access_key >>
+          secret_key: << parameters.aws_secret_key >>
+          region: << parameters.aws_region >>
+      - run:
+          name: Load Image
+          command: docker load < << parameters.artifact >>
+      - run:
+          name: Login to ECR
+          command: |
+            aws ecr get-login-password --region "${<< parameters.aws_region >>}" \
+              | docker login --username AWS --password-stdin "${<< parameters.ecr_registry >>}"
+      - run:
+          name: Tag & Push
+          command: |
+            IMAGE_TAG=$(cat image-tag.txt)
+            docker tag << pipeline.parameters.image_name >>:${IMAGE_TAG} \
+              "${<< parameters.ecr_registry >>}/${<< parameters.ecr_repo >>}:${IMAGE_TAG}"
+            docker push "${<< parameters.ecr_registry >>}/${<< parameters.ecr_repo >>}:${IMAGE_TAG}"
+
+  deploy:
+    executor: machine-exec
+    parameters:
+      aws_access_key:
+        type: env_var_name
+      aws_secret_key:
+        type: env_var_name
+      aws_region:
+        type: env_var_name
+      cluster_name:
+        type: env_var_name
+      namespace:
+        type: string
+      ecr_registry:
+        type: env_var_name
+      ecr_repo:
+        type: env_var_name
+      target_group_arn:
+        type: env_var_name
+      helm_values_file:
+        type: string
+    steps:
+      - checkout
+      - attach_workspace:
+          at: /tmp/workspace
+      - configure-aws:
+          access_key: << parameters.aws_access_key >>
+          secret_key: << parameters.aws_secret_key >>
+          region: << parameters.aws_region >>
+      - install-kubectl
+      - install-helm
+      - update-kubeconfig:
+          cluster_name: << parameters.cluster_name >>
+          region: << parameters.aws_region >>
+      - run:
+          name: Helm Deploy
+          command: |
+            IMAGE_TAG=$(cat /tmp/workspace/image-tag.txt)
+            helm upgrade --install << pipeline.parameters.helm_release_name >> \
+              << pipeline.parameters.helm_chart_dir >> \
+              -f << pipeline.parameters.helm_chart_dir >>/<< parameters.helm_values_file >> \
+              --set "image.repository=${<< parameters.ecr_registry >>}/${<< parameters.ecr_repo >>}" \
+              --set "image.tag=${IMAGE_TAG}" \
+              --set "targetGroupBinding.arn=${<< parameters.target_group_arn >>}" \
+              --namespace << parameters.namespace >> \
+              --create-namespace \
+              --wait \
+              --timeout=5m
+      - run:
+          name: Verify Rollout
+          command: |
+            kubectl rollout status deployment/<< pipeline.parameters.helm_release_name >> \
+              -n << parameters.namespace >> \
+              --timeout=300s
+      - when:
+          condition:
+            equal: [ "tracking-app-prod", << parameters.namespace >> ]
+          steps:
+            - run:
+                name: Invalidate CloudFront Cache (prod only)
+                command: |
+                  if [ -n "${PROD_CLOUDFRONT_DISTRIBUTION_ID}" ]; then
+                    aws cloudfront create-invalidation \
+                      --distribution-id "${PROD_CLOUDFRONT_DISTRIBUTION_ID}" \
+                      --paths "/tracking/*" "/fr/suivi/*" "/"
+                  fi
+
+workflows:
+  build-and-deploy:
+    jobs:
+      # ── QA pipeline (every branch) ───────────────────────────────────
+      - build-qa:
+          context: qa-context
+
+      - scan-image:
+          name: scan-image-qa
+          artifact: "image.tar.gz"
+          requires: [build-qa]
+
+      - push-ecr:
+          name: push-ecr-qa
+          artifact: "image.tar.gz"
+          requires: [scan-image-qa]
+          context: qa-context
+          aws_access_key: QA_AWS_ACCESS_KEY_ID
+          aws_secret_key: QA_AWS_SECRET_ACCESS_KEY
+          aws_region: QA_AWS_REGION
+          ecr_registry: QA_ECR_REGISTRY
+          ecr_repo: QA_ECR_REPO
+
+      - deploy:
+          name: deploy-qa
+          requires: [push-ecr-qa]
+          context: qa-context
+          aws_access_key: QA_AWS_ACCESS_KEY_ID
+          aws_secret_key: QA_AWS_SECRET_ACCESS_KEY
+          aws_region: QA_AWS_REGION
+          cluster_name: QA_EKS_CLUSTER_NAME
+          namespace: << pipeline.parameters.qa_namespace >>
+          ecr_registry: QA_ECR_REGISTRY
+          ecr_repo: QA_ECR_REPO
+          target_group_arn: QA_TARGET_GROUP_ARN
+          helm_values_file: "values-qa.yaml"
+
+      # ── PROD pipeline (main branch only, manual approval) ────────────
+      - approve-prod:
+          type: approval
+          requires: [scan-image-qa]
+          filters:
+            branches:
+              only: main
+
+      - build-prod:
+          requires: [approve-prod]
+          context: prod-context
+          filters:
+            branches:
+              only: main
+
+      - scan-image:
+          name: scan-image-prod
+          artifact: "image-prod.tar.gz"
+          requires: [build-prod]
+          filters:
+            branches:
+              only: main
+
+      - push-ecr:
+          name: push-ecr-prod
+          artifact: "image-prod.tar.gz"
+          requires: [scan-image-prod]
+          context: prod-context
+          filters:
+            branches:
+              only: main
+          aws_access_key: PROD_AWS_ACCESS_KEY_ID
+          aws_secret_key: PROD_AWS_SECRET_ACCESS_KEY
+          aws_region: PROD_AWS_REGION
+          ecr_registry: PROD_ECR_REGISTRY
+          ecr_repo: PROD_ECR_REPO
+
+      - deploy:
+          name: deploy-prod
+          requires: [push-ecr-prod]
+          context: prod-context
+          filters:
+            branches:
+              only: main
+          aws_access_key: PROD_AWS_ACCESS_KEY_ID
+          aws_secret_key: PROD_AWS_SECRET_ACCESS_KEY
+          aws_region: PROD_AWS_REGION
+          cluster_name: PROD_EKS_CLUSTER_NAME
+          namespace: << pipeline.parameters.prod_namespace >>
+          ecr_registry: PROD_ECR_REGISTRY
+          ecr_repo: PROD_ECR_REPO
+          target_group_arn: PROD_TARGET_GROUP_ARN
+          helm_values_file: "values-prod.yaml"

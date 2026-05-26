@@ -1,0 +1,21 @@
+# =============================================================================
+# QA environment overrides
+# Dynamic values supplied at deploy time:
+#   --set image.tag=<SHA7>
+#   --set targetGroupBinding.arn=<TG_ARN from terragrunt output>
+# =============================================================================
+
+namespace:
+  name: tracking-app-qa
+
+image:
+  repository: 232317180286.dkr.ecr.us-west-2.amazonaws.com/uniuni-qa-tracking-app
+
+# QA API endpoints
+config:
+  deliveryApiDomain: "https://delivery-api.qa.uniuni.ca"
+  dispatchApiDomain: "https://dispatch-api.qa.uniuni.ca"
+  driverAppDomainCa: "https://delivery-service-api.qa.uniuni.ca"
+  driverAppDomainUs: "https://delivery-service-api.qa.uniuni.com"
+
+env: qa

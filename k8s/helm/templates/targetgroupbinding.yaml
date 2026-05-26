@@ -1,0 +1,16 @@
+{{- if .Values.targetGroupBinding.enabled }}
+apiVersion: elbv2.k8s.aws/v1beta1
+kind: TargetGroupBinding
+metadata:
+  name: tracking-app
+  namespace: {{ .Values.namespace.name }}
+  labels:
+    {{- include "tracking-app.labels" . | nindent 4 }}
+spec:
+  serviceRef:
+    name: tracking-app
+    port: {{ .Values.service.port }}
+  targetGroupARN: {{ .Values.targetGroupBinding.arn | quote }}
+  targetType: ip
+  ipAddressType: ipv4
+{{- end }}
