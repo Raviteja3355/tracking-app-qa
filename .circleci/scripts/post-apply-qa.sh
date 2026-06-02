@@ -247,23 +247,29 @@ kubectl get nodes
 if [[ "$SKIP_CONTROLLER" == true ]]; then
   warn "Skipping AWS Load Balancer Controller (--skip-controller)"
 else
-  step "Installing/upgrading AWS Load Balancer Controller (v1.10.0)"
+  step "Installing AWS Load Balancer Controller CRDs"
 
-  helm repo add eks https://aws.github.io/eks-charts >/dev/null 2>&1 || true
-  helm repo update eks
+kubectl apply -k "github.com/aws/eks-charts/stable/aws-load-balancer-controller/crds?ref=master"
 
-  helm upgrade --install aws-load-balancer-controller \
-    eks/aws-load-balancer-controller \
-    --namespace kube-system \
-    --version 1.10.0 \
-    --set clusterName="$CLUSTER" \
-    --set serviceAccount.create=true \
-    --set serviceAccount.name=aws-load-balancer-controller \
-    --set serviceAccount.annotations."eks\.amazonaws\.com/role-arn"="$ALB_ROLE_ARN" \
-    --set region="$REGION" \
-    --set vpcId="$VPC_ID" \
-    --wait \
-    --timeout=3m
+ok "CRDs applied"
+
+step "Installing/upgrading AWS Load Balancer Controller (v1.10.0)"
+
+helm repo add eks https://aws.github.io/eks-charts >/dev/null 2>&1 || true
+helm repo update eks
+
+helm upgrade --install aws-load-balancer-controller \
+  eks/aws-load-balancer-controller \
+  --namespace kube-system \
+  --version 1.10.0 \
+  --set clusterName="$CLUSTER" \
+  --set serviceAccount.create=true \
+  --set serviceAccount.name=aws-load-balancer-controller \
+  --set serviceAccount.annotations."eks\.amazonaws\.com/role-arn"="$ALB_ROLE_ARN" \
+  --set region="$REGION" \
+  --set vpcId="$VPC_ID" \
+  --wait \
+  --timeout=5m
 
   step "Verifying ALB Controller rollout"
 
