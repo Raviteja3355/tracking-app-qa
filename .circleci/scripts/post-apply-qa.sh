@@ -247,13 +247,7 @@ kubectl get nodes
 if [[ "$SKIP_CONTROLLER" == true ]]; then
   warn "Skipping AWS Load Balancer Controller (--skip-controller)"
 else
-  step "Installing AWS Load Balancer Controller CRDs"
-
-kubectl apply -k "github.com/aws/eks-charts/stable/aws-load-balancer-controller/crds?ref=master"
-
-ok "CRDs applied"
-
-step "Installing/upgrading AWS Load Balancer Controller (v1.10.0)"
+  step "Installing/upgrading AWS Load Balancer Controller (v1.10.0)"
 
 helm repo add eks https://aws.github.io/eks-charts >/dev/null 2>&1 || true
 helm repo update eks
