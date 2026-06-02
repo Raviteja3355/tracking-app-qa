@@ -86,7 +86,7 @@ fail() {
 # -----------------------------------------------------------------------------
 step "Checking prerequisites"
 
-for tool in aws terragrunt kubectl helm jq; do
+for tool in aws kubectl helm jq; do
   if command -v "$tool" >/dev/null 2>&1; then
     ok "$tool found: $(command -v "$tool")"
   else
@@ -94,10 +94,17 @@ for tool in aws terragrunt kubectl helm jq; do
   fi
 done
 
+# terragrunt is optional — if absent the script falls back to reading S3 state
+if command -v terragrunt >/dev/null 2>&1; then
+  ok "terragrunt found: $(command -v terragrunt)"
+else
+  warn "terragrunt not found — will fall back to S3 state file"
+fi
+
 # -----------------------------------------------------------------------------
 # AWS account guard
 # -----------------------------------------------------------------------------
-EXPECTED_ACCOUNT="232317180286"
+EXPECTED_ACCOUNT="${EXPECTED_ACCOUNT}"
 
 step "Verifying AWS credentials (expected account: $EXPECTED_ACCOUNT)"
 
@@ -145,9 +152,9 @@ if [[ $TG_EXIT -eq 0 ]] && echo "$TF_RAW" | jq empty >/dev/null 2>&1; then
 else
   warn "terragrunt output failed. Falling back to S3 state file..."
 
-  STATE_BUCKET="uniuni-tracking-app-s3"
-  STATE_KEY="uni-ext-collab/tracking-app/environments/qa/terraform.tfstate"
-  STATE_REGION="us-west-2"
+  STATE_BUCKET="${STATE_BUCKET}"
+  STATE_KEY="${STATE_KEY}"
+  STATE_REGION="${STATE_REGION}"
 
   echo "    Reading: s3://$STATE_BUCKET/$STATE_KEY"
 
@@ -203,7 +210,7 @@ TG_ARN=$(get_tf_output "target_group_arn")
 REGION=$(echo "$ECR_URL" | cut -d'.' -f4)
 
 if [[ -z "$REGION" ]]; then
-  REGION="us-west-2"
+  REGION="${STATE_REGION}"
 fi
 
 echo ""
