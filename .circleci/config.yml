@@ -345,11 +345,6 @@ workflows:
       not: << pipeline.parameters.run_cluster_setup >>
     jobs:
       # ── QA pipeline (Main branch) ───────────────────────────────────
-      - setup-cluster-qa:
-          filters:
-            branches:
-              only:
-                - main
       - build-qa:
          filters:
             branches:
@@ -380,7 +375,7 @@ workflows:
 
       - deploy:
           name: deploy-qa
-          requires: [push-ecr-qa, setup-cluster-qa]
+          requires: [push-ecr-qa]
           filters:
             branches:
               only:
@@ -445,4 +440,3 @@ workflows:
           ecr_repo: PROD_ECR_REPO
           target_group_arn: PROD_TARGET_GROUP_ARN
           helm_values_file: "values-prod.yaml"
-          
