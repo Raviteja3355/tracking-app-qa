@@ -7,7 +7,7 @@ RUN npm run build
 
 FROM nginx:alpine
 
-# 1. Update and Upgrade immediately to fix CVEs
+# 1. Update and Upgrade packages
 RUN apk update && apk upgrade --no-cache && \
     apk add --no-cache ca-certificates tzdata && \
     rm -rf /var/cache/apk/*
