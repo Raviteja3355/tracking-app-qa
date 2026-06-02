@@ -1,0 +1,12 @@
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: tracking-app
+  namespace: {{ .Values.namespace.name }}
+  labels:
+    {{- include "tracking-app.labels" . | nindent 4 }}
+spec:
+  minAvailable: 2
+  selector:
+    matchLabels:
+      {{- include "tracking-app.selectorLabels" . | nindent 6 }}
