@@ -265,7 +265,13 @@ jobs:
       - update-kubeconfig:
           cluster_name: << parameters.cluster_name >>
           region: << parameters.aws_region >>
-      
+      - run:
+          name: Wait for TargetGroupBinding CRD
+          command: |
+            echo "Waiting for TargetGroupBinding CRD to be Established (installed by ALB controller)..."
+            kubectl wait --for=condition=Established \
+              crd/targetgroupbindings.elbv2.k8s.aws \
+              --timeout=180s
       - run:
           name: Helm Deploy
           command: |
