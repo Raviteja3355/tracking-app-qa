@@ -265,19 +265,7 @@ jobs:
       - update-kubeconfig:
           cluster_name: << parameters.cluster_name >>
           region: << parameters.aws_region >>
-      - run:
-          name: Remove failed Helm release if present
-          command: |
-            STATUS=$(helm status << pipeline.parameters.helm_release_name >> \
-              --namespace << parameters.namespace >> 2>/dev/null \
-              | grep "^STATUS:" | awk '{print $2}')
-            if [ "$STATUS" = "failed" ] || [ "$STATUS" = "pending-install" ] || [ "$STATUS" = "pending-upgrade" ]; then
-              echo "Found release in state '$STATUS' — uninstalling before fresh deploy"
-              helm uninstall << pipeline.parameters.helm_release_name >> \
-                --namespace << parameters.namespace >>
-            else
-              echo "Release state: '${STATUS:-not found}' — no cleanup needed"
-            fi
+      
       - run:
           name: Helm Deploy
           command: |
