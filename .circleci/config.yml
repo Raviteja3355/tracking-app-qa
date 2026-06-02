@@ -266,12 +266,24 @@ jobs:
           cluster_name: << parameters.cluster_name >>
           region: << parameters.aws_region >>
       - run:
-          name: Wait for TargetGroupBinding CRD
+          name: Ensure ALB Controller CRDs
           command: |
-            echo "Waiting for TargetGroupBinding CRD to be Established (installed by ALB controller)..."
+            if kubectl get crd targetgroupbindings.elbv2.k8s.aws >/dev/null 2>&1; then
+              echo "TargetGroupBinding CRD already present."
+            else
+              echo "CRD not found — pulling chart and applying CRDs..."
+              helm repo add eks https://aws.github.io/eks-charts 2>/dev/null || true
+              helm repo update eks >/dev/null 2>&1
+              helm pull eks/aws-load-balancer-controller \
+                --version 1.10.0 \
+                --untar \
+                --untardir /tmp/alb-chart >/dev/null 2>&1
+              kubectl apply -f /tmp/alb-chart/aws-load-balancer-controller/crds/
+            fi
+            echo "Waiting for CRD to be Established..."
             kubectl wait --for=condition=Established \
               crd/targetgroupbindings.elbv2.k8s.aws \
-              --timeout=180s
+              --timeout=60s
       - run:
           name: Helm Deploy
           command: |
