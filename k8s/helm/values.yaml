@@ -76,11 +76,11 @@ targetGroupBinding:
   arn: ""
 
 # -- API endpoints written into the runtime ConfigMap (envsubst fills config.js)
-config:
-  deliveryApiDomain: ""
-  dispatchApiDomain: ""
-  driverAppDomainCa: ""
-  driverAppDomainUs: ""
+# config:
+#   deliveryApiDomain: ""
+#   dispatchApiDomain: ""
+#   driverAppDomainCa: ""
+#   driverAppDomainUs: ""
 
 # -- Applied as a label (env: qa | prod) to all resources
 env: ""
