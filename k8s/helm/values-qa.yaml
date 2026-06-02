@@ -10,13 +10,13 @@ namespace:
   create: false
 
 image:
-  repository: 232317180286.dkr.ecr.us-west-2.amazonaws.com/uniuni-qa-tracking-app
+  pullPolicy: IfNotPresent
 
 # QA API endpoints
-config:
-  deliveryApiDomain: "https://delivery-api.qa.uniuni.ca"
-  dispatchApiDomain: "https://dispatch-api.qa.uniuni.ca"
-  driverAppDomainCa: "https://delivery-service-api.qa.uniuni.ca"
-  driverAppDomainUs: "https://delivery-service-api.qa.uniuni.com"
+# config:
+#   deliveryApiDomain: "https://delivery-api.qa.uniuni.ca"
+#   dispatchApiDomain: "https://dispatch-api.qa.uniuni.ca"
+#   driverAppDomainCa: "https://delivery-service-api.qa.uniuni.ca"
+#   driverAppDomainUs: "https://delivery-service-api.qa.uniuni.com"
 
 env: qa
