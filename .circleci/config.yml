@@ -100,16 +100,15 @@ commands:
       - run:
           name: Create .env.local
           command: |
-
-           cat > << pipeline.parameters.app_dir >>/.env.local \<<EOF
-           NEXT_PUBLIC_DELIVERY_API=${NEXT_PUBLIC_DELIVERY_API}
-           NEXT_PUBLIC_DISPATCH_API=${NEXT_PUBLIC_DISPATCH_API}
-           NEXT_PUBLIC_DRIVER_APP_CA=${NEXT_PUBLIC_DRIVER_APP_CA}
-           NEXT_PUBLIC_DRIVER_APP_US=${NEXT_PUBLIC_DRIVER_APP_US}
-           NEXT_PUBLIC_TRACKING_API_KEY=${NEXT_PUBLIC_TRACKING_API_KEY}
-           NEXT_PUBLIC_EDD_API_URL=${NEXT_PUBLIC_EDD_API_URL}
-           NEXT_PUBLIC_EDD_API_KEY=${NEXT_PUBLIC_EDD_API_KEY}
-           EOF
+            cat > .env.local \<<EOF
+            NEXT_PUBLIC_DELIVERY_API=${NEXT_PUBLIC_DELIVERY_API}
+            NEXT_PUBLIC_DISPATCH_API=${NEXT_PUBLIC_DISPATCH_API}
+            NEXT_PUBLIC_DRIVER_APP_CA=${NEXT_PUBLIC_DRIVER_APP_CA}
+            NEXT_PUBLIC_DRIVER_APP_US=${NEXT_PUBLIC_DRIVER_APP_US}
+            NEXT_PUBLIC_TRACKING_API_KEY=${NEXT_PUBLIC_TRACKING_API_KEY}
+            NEXT_PUBLIC_EDD_API_URL=${NEXT_PUBLIC_EDD_API_URL}
+            NEXT_PUBLIC_EDD_API_KEY=${NEXT_PUBLIC_EDD_API_KEY}
+            EOF
 
 jobs:
   # QA: build with QA env vars baked in (requires qa-context)
