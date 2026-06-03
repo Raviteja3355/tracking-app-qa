@@ -5,7 +5,7 @@ RUN npm ci && npm cache clean --force
 COPY . .
 RUN npm run build
 
-FROM nginx:stable-alpine3.22
+FROM nginx:alpine3.22
 
 # 1. Update and Upgrade packages
 RUN apk update && apk upgrade --no-cache && \
